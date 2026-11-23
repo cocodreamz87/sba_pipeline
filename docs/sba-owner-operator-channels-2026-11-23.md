@@ -219,3 +219,14 @@ Saved 5 files:
 - `outreach/sba-out-of-scope-change-order-2026-11-23.md` — email + Slack versions, quote-before-build gate.
 - `outreach/sba-14day-post-launch-checkin-2026-11-23.md` — email + Slack versions; pasted twice in the same turn, saved once.
 Runbook now ends at step 19. None of the 5 pushed to GitHub yet.
+
+---
+
+## Change-order quote + monthly care metrics + run/error queries (added 2026-11-23 04:47 ET)
+
+Saved 4 files:
+- `outreach/sba-change-order-quote-2026-11-23.md` — fixed price, deliverables, turnaround, out-of-scope line, reply "Approved" gate, email + Slack.
+- `sba-monthly-care-metrics-2026-11-23.md` — one row per client/month: uptime, wf1/2/3 runs, errors, tweaks, change orders; JSON example validated (113 = 48+36+29).
+- `sba-lead-pipeline/sba-care-metrics-schema.sql` — tier2_monthly_care_logs DDL, generated total_workflow_runs, unique (client_slug, care_month); NOT run against live Supabase.
+- `sba-lead-pipeline/sba-run-error-queries.sql` — 6 queries: runs/errors by sequence + by workflow, recent 20 failed, grouped 7-day failures.
+FLAG: run/error queries BLOCKED — sba_outreach_touches does not exist, and automation_runs exists nowhere yet. None of the 4 pushed to GitHub yet.
