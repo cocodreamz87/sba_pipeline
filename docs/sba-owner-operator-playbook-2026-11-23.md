@@ -14,11 +14,21 @@ This extends the existing Type O Overwhelmed Operator lens (2026-10-06) to a spe
 data.sba.gov FOIA CSVs (7a + 504, quarterly)
   → process-sba.js          filter + dedupe → output/qualified_sba_operators.csv
   → enrich-sba.js           Places API + HTML friction audit → output/enriched_sba_prospects.csv
-  → sba_prospects.sql       Supabase table (run once in SQL Editor)
-  → sync-sba-supabase.js    batch upsert on dedupe_id → top 15 scored leads printed
+  → sba_prospects.sql       Neon Postgres tables (run once via psql / Neon console)
+  → sync script             batch upsert on dedupe_id → top 15 scored leads printed
+                            (sync-sba-supabase.js is Supabase-specific — needs a pg/DATABASE_URL swap, see §2b)
   → v_high_priority_sba_queue (score ≥ 65) → Track A/B/C outreach
   → Email + Loom → 48-hr call / QR postcard → booking
 ```
+
+## 2b. Databases — Neon + Airtable (decided 2026-11-23)
+
+Supabase is out for this pipeline. The databases are **Neon (Postgres)** and **Airtable**, confirmed by Demetrius 2026-11-23 from a screenshot of his secrets list (names only — values hidden and unverified):
+
+- **Neon — `DATABASE_URL`:** the pipeline's Postgres home. All pipeline SQL is plain Postgres and runs on Neon as-is: `sba_prospects.sql`, daily queue queries, care-metrics schema, run/error queries, monthly care upsert. Run via `psql $DATABASE_URL` or the Neon SQL console.
+- **Airtable — four secrets present:** `AIRTABLE_API_K…`, `AIRTABLE_BASE_…`, `AIRTABLE_PROS…`, `AIRTABLE_CARE_…` (full names truncated in the screenshot, unconfirmed). Maps to the connected Site Leads base: prospects table + care-log table live in Airtable alongside Neon. Exact base/table names still to confirm.
+- **Also present in the same secrets list:** `GOOGLE_PLACE…` (Places key for enrichment), `SLACK_WEBHOC…`, `MAKE_WEBHOO…`, `SBA_WEBHOOK_…`, `RELAY_INGRESS…` — the n8n / Cloudflare relay wiring. `N8N_WEBHOOK_URL` and `N8N_WEBHOOK_SECRET` were not visible in the shot — confirm they are set before deploying the relay.
+- **What still needs a code change:** `sync-sba-supabase.js` uses `@supabase/supabase-js` and cannot talk to Neon. Swap it to a Postgres client (`pg`) using `DATABASE_URL`, keeping the same behavior: batch upsert (100/batch) on `dedupe_id`, omit the generated score on write, print top 15. Do not invent the swap — build and test it before the first real sync.
 
 Top 50 accounts/month, 3-point surround sound.
 
@@ -29,8 +39,8 @@ Top 50 accounts/month, 3-point surround sound.
 | Strategy + channels + waterfall | `prospecting/sba-owner-operator-channels-2026-11-23.md` | Saved, 114 lines |
 | Step 1 filter/dedupe script | `prospecting/sba-lead-pipeline/process-sba.js` (346 lines) | Syntax-checked, test-run OK (0 rows — no CSVs yet), deps installed |
 | Step 2 enrichment script | `prospecting/sba-lead-pipeline/enrich-sba.js` (382 lines) | Syntax-checked, clean missing-key exit, `dotenv` installed |
-| Step 3 Supabase schema | `prospecting/sba-lead-pipeline/sba_prospects.sql` (271 lines) | Saved, **not run against live Supabase**, no local Postgres parser to validate |
-| Step 4 Supabase sync | `prospecting/sba-lead-pipeline/sync-sba-supabase.js` (263 lines) | Syntax-checked, clean missing-env exit, `@supabase/supabase-js` installed |
+| Step 3 Neon schema | `prospecting/sba-lead-pipeline/sba_prospects.sql` (271 lines) | Saved, **not run against Neon yet**, no local Postgres parser to validate — plain Postgres, runs on Neon via psql / console |
+| Step 4 sync (Supabase client) | `prospecting/sba-lead-pipeline/sync-sba-supabase.js` (263 lines) | Syntax-checked, clean missing-env exit, `@supabase/supabase-js` installed — **needs a pg/DATABASE_URL swap for Neon before first use (see §2b)** |
 | Pipeline README + package | `prospecting/sba-lead-pipeline/README.md`, `package.json`, `.env.example` | Current through Step 4 |
 | Track A outreach copy | `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md` | Saved — 2 emails, call opener, voicemail, tips |
 | 15-min discovery call | `prospecting/outreach/sba-discovery-call-15min-2026-11-23.md` | Saved 2026-11-23 — 5-phase timed agenda + word-for-word script, next step is a 20-min Scope & Workflow Map |
@@ -39,7 +49,7 @@ Top 50 accounts/month, 3-point surround sound.
 | 10-min pre-call audit | `prospecting/outreach/sba-pre-call-audit-10min-2026-11-23.md` | Saved 2026-11-23 — question-conversion + 3-bullet rule; item-by-item checklist was not in the paste, not invented |
 | 3-day follow-up nudge | `prospecting/outreach/sba-follow-up-nudge-3day-2026-11-23.md` | Saved 2026-11-23 — same-thread bump, momentum + low-pressure pivot variations, closing note after 4–5 more days — pushed 2026-11-23, commit 1e9f786e |
 | Post-discovery call notes | `prospecting/outreach/sba-discovery-call-notes-template-2026-11-23.md` | Saved 2026-11-23 — 3–5 min template: bottlenecks + verbatim quotes, ROI inputs, tier alignment + next step — pushed 2026-11-23, commit 1e9f786e |
-| Close-out email | `prospecting/outreach/sba-close-out-email-2026-11-23.md` | Saved 2026-11-23 — after recap + nudge + 4–5 days silence, down-sell + high-signal variations, mark closed/paused in Supabase — pushed 2026-11-23, commit 1e9f786e |
+| Close-out email | `prospecting/outreach/sba-close-out-email-2026-11-23.md` | Saved 2026-11-23 — after recap + nudge + 4–5 days silence, down-sell + high-signal variations, mark closed/paused in Neon — pushed 2026-11-23, commit 1e9f786e |
 | Client onboarding & kickoff | `prospecting/sba-client-onboarding-kickoff-2026-11-23.md` | Saved 2026-11-23 — post-SOW, post-deposit; tips: single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only; item-by-item checklist was not in the paste, not invented; pushed 2026-11-23, commit 6e14eef4 |
 | 30-min kickoff call agenda | `prospecting/sba-kickoff-call-30min-2026-11-23.md` | Saved 2026-11-23 — Tier 2 kickoff, 5 timed blocks, sitemap + 3 workflows + access/compliance + dates locked, recap within 1–2 hrs; pushed 2026-11-23, commit bccd4715 |
 | Daily queue SQL | `prospecting/sba-lead-pipeline/sba-daily-queue-queries.sql` | Saved 2026-11-23 — due nudges, uncontacted 60+ (limit 25), combined queue; **BLOCKED: needs v_sba_prospect_engagement view + 'ready' status, neither in schema yet**; pushed 2026-11-23, commit 3c5fdf8f |
@@ -54,13 +64,20 @@ Top 50 accounts/month, 3-point surround sound.
 | Bug vs. change order rule | `prospecting/sba-bug-vs-change-order-2026-11-23.md` | Saved 2026-11-23 — internal triage: bug fix needs all 3 conditions, change order if any of 3 apply, decision table, one-line responses; pushed 2026-11-23, commit aba4f875 |
 | Out-of-scope message | `prospecting/outreach/sba-out-of-scope-change-order-2026-11-23.md` | Saved 2026-11-23 — email + Slack versions, quote-before-build gate; pushed 2026-11-23, commit aba4f875 |
 | 14-day post-launch check-in | `prospecting/outreach/sba-14day-post-launch-checkin-2026-11-23.md` | Saved 2026-11-23 — email + Slack versions, lead/booking flow + edge cases, steady $650/mo care; pasted twice, saved once; pushed 2026-11-23, commit aba4f875 |
-| Change-order quote | `prospecting/outreach/sba-change-order-quote-2026-11-23.md` | Saved 2026-11-23 — fixed price, deliverables, turnaround, out-of-scope line, reply "Approved" gate (email + Slack); NOT yet pushed to GitHub |
-| Monthly care metrics log | `prospecting/sba-monthly-care-metrics-2026-11-23.md` + `prospecting/sba-lead-pipeline/sba-care-metrics-schema.sql` | Saved 2026-11-23 — one row per client/month, uptime + wf1/2/3 runs + errors + tweaks + change orders; JSON example validated (113 = 48+36+29); schema NOT run against live Supabase; NOT yet pushed to GitHub |
-| Run & error queries | `prospecting/sba-lead-pipeline/sba-run-error-queries.sql` | Saved 2026-11-23 — 6 queries: runs/errors by sequence + by workflow, recent 20 failed, grouped 7-day failures; **BLOCKED: touches table + automation_runs table don't exist yet**; NOT yet pushed to GitHub |
+| Change-order quote | `prospecting/outreach/sba-change-order-quote-2026-11-23.md` | Saved 2026-11-23 — fixed price, deliverables, turnaround, out-of-scope line, reply "Approved" gate (email + Slack); pushed 2026-11-23, commit 7e0862c3 |
+| Monthly care metrics log | `prospecting/sba-monthly-care-metrics-2026-11-23.md` + `prospecting/sba-lead-pipeline/sba-care-metrics-schema.sql` | Saved 2026-11-23 — one row per client/month, uptime + wf1/2/3 runs + errors + tweaks + change orders; JSON example validated (113 = 48+36+29); schema NOT run against Neon yet; pushed 2026-11-23, commit 7e0862c3 |
+| Run & error queries | `prospecting/sba-lead-pipeline/sba-run-error-queries.sql` | Saved 2026-11-23 — 6 queries: runs/errors by sequence + by workflow, recent 20 failed, grouped 7-day failures; **BLOCKED: touches table + automation_runs table don't exist yet**; pushed 2026-11-23, commit 7e0862c3 |
+| Monthly care upsert | `prospecting/sba-lead-pipeline/sba-monthly-care-upsert.sql` | Saved 2026-11-23 — automation_runs → tier2_monthly_care_logs, wf1/2/3 mapping, most-frequent top error, preserves manual tweaks/change orders, idempotent; **BLOCKED: both tables not created in Neon yet**; pushed 2026-11-23, commit 6cc1f5e9 |
+| Deposit gate reminder | `prospecting/outreach/sba-deposit-gate-reminder-2026-11-23.md` | Saved 2026-11-23 — email + Slack, deposit invoice gate before build slot locks; pushed 2026-11-23, commit 6cc1f5e9 |
+| automation_runs schema | `prospecting/sba-lead-pipeline/sba-automation-runs-schema.sql` | Saved 2026-11-23 — automation_runs DDL, unique execution_id, 2 indexes; schema defined, NOT run against Neon yet; pushed 2026-11-23, commit 6cc1f5e9 |
+| Databases | Neon + Airtable (see §2b) | Decided 2026-11-23 — DATABASE_URL + 4 Airtable secrets present (names only, values unverified); Supabase out for this pipeline |
+| n8n global error workflow | `prospecting/sba-n8n-global-error-workflow-2026-11-23.md` + `prospecting/sba-lead-pipeline/sba-n8n-error-normalize.js` | Saved 2026-11-23 — Error Trigger → Normalize (client_slug | workflow_name convention) → Postgres/REST insert, Slack branch; JS syntax-checked OK inside n8n wrapper; pushed 2026-11-23, commit 6cc1f5e9 |
+| n8n error Slack alert | `prospecting/sba-n8n-error-slack-alert-2026-11-23.md` | Saved 2026-11-23 — Block Kit payload + text-only alternative, keep text populated, guard execution_url; pushed 2026-11-23, commit 6cc1f5e9 |
+| Milestone 2 gate reminder | `prospecting/outreach/sba-milestone2-gate-reminder-2026-11-23.md` | Saved 2026-11-23 — email + Slack, staging approved → M2 balance clears → DNS cutover + launch (within 24 hrs of clearance); pushed 2026-11-23, commit 6cc1f5e9 |
 | Tier 2 SOW template | `prospecting/sba-sow-tier2-2026-11-23.md` | Saved 2026-11-23 — $7,500 in 3 milestones ($2,250 / $3,000 / $2,250), $650/mo care, 3–4 weeks, 2 revision rounds, 14-day bug cover; NOT legal advice, counsel review before sending |
 | 3-question ROI math | `prospecting/sba-roi-math-2026-11-23.md` | Saved 2026-11-23 — owner-supplied V × C × R, 2–3 recovered leads/mo covers $7,500 in ~1.7–3.3 months; use gross profit for sharp SBA owners, 6 hrs/wk @ $75/hr = ~$1,950/mo reclaimed |
 
-No SBA CSVs downloaded yet (`data/` empty). No API keys stored (`.env` does not exist; only `.env.example`). No leads in Supabase yet. No outreach sent.
+No SBA CSVs downloaded yet (`data/` empty). No API keys stored locally (`.env` does not exist; only `.env.example`). No leads in Neon yet. No outreach sent. Secrets live in his Neon/Airtable secrets store, not in this repo — values never copied here.
 
 ## 4. The filters, consolidated
 
@@ -91,7 +108,7 @@ No SBA CSVs downloaded yet (`data/` empty). No API keys stored (`.env` does not 
 | Chambers, BNI, trade groups | Partner with SBA loan officers + commercial insurance agents — they meet owners right after closing |
 | Facebook & industry groups | Answer ops/tech questions in vertical owner groups with mini-teardowns, not cold DMs |
 
-## 7. Campaign tracks (auto-assigned by the Supabase trigger)
+## 7. Campaign tracks (auto-assigned by the Neon trigger)
 
 | Track | Trigger | Hook |
 | --- | --- | --- |
@@ -107,7 +124,7 @@ This is the main inconsistency in the system. There are two lead scores, compute
 - **`enrich-sba.js` `lead_priority_score` (CSV, pre-sync):** base 40; no booking +25, slow ≥2500ms +15, mailto-only +15, no form +10, missing viewport +10; NO_WEBSITE fixed 85; TIMEOUT/UNREACHABLE fixed 75; +10 if 50+ reviews and no booking; +5 if acquisition. Capped 100.
 - **Postgres `computed_lead_score` (DB, source of truth after sync):** NO_WEBSITE 45, TIMEOUT/FETCH_ERROR 35, no booking 25, slow 15, mailto-only 15, no form 10, missing viewport 10, 50+ reviews + no booking 10, acquisition 5, loan ≥$500k 5, plus manual `score_adjustment` −25…+25. Clamped 0–100. No base 40.
 
-Consequence: the same lead scores higher in the enriched CSV than in Supabase (e.g. a no-website lead: 85 in CSV, 45 + 5 acquisition + 5 loan = 55 max in DB, before adjustment). The DB queue threshold is ≥65 in `v_high_priority_sba_queue`, so CSV-ranked leads can fall out of the DB queue. **Treat the Postgres score as the real score; use the CSV score only to order enrichment spend.** Decide once whether to align them — either raise the DB no-website weight or lower the CSV one — before the first real batch, or the queue will look empty after sync.
+Consequence: the same lead scores higher in the enriched CSV than in Neon (e.g. a no-website lead: 85 in CSV, 45 + 5 acquisition + 5 loan = 55 max in DB, before adjustment). The DB queue threshold is ≥65 in `v_high_priority_sba_queue`, so CSV-ranked leads can fall out of the DB queue. **Treat the Postgres score as the real score; use the CSV score only to order enrichment spend.** Decide once whether to align them — either raise the DB no-website weight or lower the CSV one — before the first real batch, or the queue will look empty after sync.
 
 ## 9. Track A outreach — the only complete copy
 
@@ -129,11 +146,11 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 6. **Tracks B and C have hooks, no copy** — no emails, no call scripts, unlike Track A.
 7. **No Loom production step** — the whole loop depends on a 90-sec teardown per lead, but there is no template, recording checklist, or who-records-it decision.
 8. **No direct-mail asset** — postcard / 1-page audit snapshot is strategy only; no design, no print/mail vendor, no cost.
-9. **No Supabase project confirmed** — schema not run, URL/key not in `.env`, no project ref on record. The existing Supabase RLS exposure goal (`supabase-orange-grass`) is separate and unresolved — do not confuse the two projects.
+9. **Database decision made 2026-11-23: Neon + Airtable, Supabase out** — DATABASE_URL + 4 Airtable secrets confirmed present by screenshot (names only, values unverified). What is still open: the sync script needs its pg/DATABASE_URL swap; the Airtable base/table names are truncated in the screenshot and unconfirmed; N8N_WEBHOOK_URL / N8N_WEBHOOK_SECRET were not visible. The existing Supabase RLS exposure goal (`supabase-orange-grass`) is separate and unresolved — do not confuse it with this pipeline, which no longer uses Supabase.
 10. **States are script-only** — GA/FL/TX/NC/TN appears only in `process-sba.js` CONFIG, not in the strategy notes. Atlanta/GA is the stated primary; the other four are an expansion choice that was never explicitly decided.
 11. **Engagement view missing** — daily queue SQL + n8n workflow depend on `v_sba_prospect_engagement` (total_touches, email/call counts, inbound_replies, latest_outcome) and an outreach status `'ready'`; neither exists in `sba_prospects.sql`. Build the engagement tracking (table/view + touch logging) before running either, or both fail.
 12. **Touches table missing** — inbound reply webhook depends on `sba_outreach_touches` + `outreach_channel_type` / `touch_direction_type` / `touch_outcome_type` enums + `trg_sba_touches_after_insert` trigger; none exist in `sba_prospects.sql` (checked 2026-11-23). Build the touches table + enums + trigger together with the engagement view.
-13. **automation_runs table missing** — run/error queries also need `public.automation_runs` (workflow_name, status, error_message, created_at); it exists nowhere yet. Build it alongside the touches table if workflow execution logging is wanted.
+13. **automation_runs table missing** — run/error queries also need `public.automation_runs` (workflow_name, status, error_message, created_at); it exists nowhere yet. Build it alongside the touches table if workflow execution logging is wanted. UPDATE 2026-11-23: schema now saved (`sba-automation-runs-schema.sql`, unique execution_id + 2 indexes) — still NOT run against Neon, so the upsert + run/error queries stay blocked until both tables are created in Neon.
 
 ## 11. Runbook — in order
 
@@ -141,24 +158,27 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 2. Decide the open items in §10 (score alignment, new-business line, franchise filter, states) and edit `process-sba.js` CONFIG if needed.
 3. `node process-sba.js` → `output/qualified_sba_operators.csv`.
 4. Put `GOOGLE_PLACES_API_KEY` in `.env` (Places API (New) enabled, billing active) → `node enrich-sba.js` → `output/enriched_sba_prospects.csv`.
-5. Run `sba_prospects.sql` in the Supabase SQL Editor.
-6. Put `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in `.env` → `node sync-sba-supabase.js` → top 15 printed.
+5. Run `sba_prospects.sql` against Neon (`psql $DATABASE_URL -f sba_prospects.sql`, or the Neon SQL console).
+6. Swap the sync script to Postgres (`pg` + `DATABASE_URL`, same behavior: 100/batch upsert on `dedupe_id`, omit generated score, print top 15) → run it → top 15 printed.
 7. Work `v_high_priority_sba_queue` (score ≥65), top 50/month: Track A copy is ready; B/C need copy first.
 8. Enrich owner contacts (Step 3 — unbuilt), record Looms, send Email 1, call/voicemail in 24–48 hrs, or QR postcard at 48 hrs.
 9. Booked replies go to the 15-min discovery call (timed agenda + script saved), then to a 20-min Scope & Workflow Map — present the 3-tier pricing there (Tier 2 anchor, Tier 1 down-sell with 45-day credit, Tier 3 anchor), or a clean disqualify.
 10. Fill out the post-discovery call notes in 3–5 minutes (verbatim quotes first, lock the ROI math), then send the recap email within 2 hours — bottlenecks mirrored back, 3 tiers, reply 1 / 2 / 3 / "call".
-11. No reply in 3 days: send the 3-day follow-up nudge in the same thread (momentum or low-pressure pivot version). Still no reply after 4–5 more days: send the close-out email (down-sell or high-signal variation), mark the lead closed/paused in Supabase, stop chasing — thread stays open for them to revive.
+11. No reply in 3 days: send the 3-day follow-up nudge in the same thread (momentum or low-pressure pivot version). Still no reply after 4–5 more days: send the close-out email (down-sell or high-signal variation), mark the lead closed/paused in Neon, stop chasing — thread stays open for them to revive.
 12. On a yes, send the Tier 2 SOW (after counsel review) — $2,250 deposit to reserve the slot, then $3,000 at staging, $2,250 at launch, $650/mo care from launch.
 13. After SOW signed + deposit clears: run client onboarding & kickoff — single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only, never plain email.
 14. Hold the 30-min kickoff call — ground rules, sitemap, 3 workflows + edge cases, access/compliance, lock staging + launch dates; send recap + onboarding checklist link within 1–2 hours.
 15. Send the post-kickoff recap email within 1–2 hours — agreed sitemap, 3 workflows, target dates, still-needed list only.
-16. Daily ops (once Supabase is live): 8am ET n8n Slack digest from the daily queue queries — due follow-ups first, uncontacted 60+ second. BLOCKED until v_sba_prospect_engagement is built.
+16. Daily ops (once Neon is live): 8am ET n8n Slack digest from the daily queue queries — due follow-ups first, uncontacted 60+ second. BLOCKED until v_sba_prospect_engagement is built in Neon.
 17. Pre-launch: run the QA checklist, point every form/webhook to production, don't touch MX/SPF/DKIM, clean test records, then flip DNS.
 18. Launch: send the launch & handoff email (live URL, 3 workflows, $650/mo care, 14-day check-in date, support boundaries).
 19. Post-launch: triage requests with the bug-vs-change-order rule; out-of-scope asks get the change-order message + quote before any build; send the 14-day check-in.
 
 ## 12. Decisions owed
 
+- Neon sync: swap `sync-sba-supabase.js` to `pg` + `DATABASE_URL`, or write a fresh Neon sync script?
+- Airtable mapping: confirm the full base/table names behind `AIRTABLE_BASE_…`, `AIRTABLE_PROS…`, `AIRTABLE_CARE_…` — which table holds prospects, which holds care logs?
+- Confirm `N8N_WEBHOOK_URL` and `N8N_WEBHOOK_SECRET` are set before deploying the relay.
 - Align the two scores, or accept Postgres as truth and CSV as enrichment ordering only?
 - Remove `NEW BUSINESS OR 2 YEARS OR LESS` from the script?
 - Add a franchise / bare-LLC filter, or drop that exclusion?
