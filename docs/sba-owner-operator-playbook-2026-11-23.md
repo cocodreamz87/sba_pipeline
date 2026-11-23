@@ -40,7 +40,8 @@ Top 50 accounts/month, 3-point surround sound.
 | 3-day follow-up nudge | `prospecting/outreach/sba-follow-up-nudge-3day-2026-11-23.md` | Saved 2026-11-23 — same-thread bump, momentum + low-pressure pivot variations, closing note after 4–5 more days — pushed 2026-11-23, commit 1e9f786e |
 | Post-discovery call notes | `prospecting/outreach/sba-discovery-call-notes-template-2026-11-23.md` | Saved 2026-11-23 — 3–5 min template: bottlenecks + verbatim quotes, ROI inputs, tier alignment + next step — pushed 2026-11-23, commit 1e9f786e |
 | Close-out email | `prospecting/outreach/sba-close-out-email-2026-11-23.md` | Saved 2026-11-23 — after recap + nudge + 4–5 days silence, down-sell + high-signal variations, mark closed/paused in Supabase — pushed 2026-11-23, commit 1e9f786e |
-| Client onboarding & kickoff | `prospecting/sba-client-onboarding-kickoff-2026-11-23.md` | Saved 2026-11-23 — post-SOW, post-deposit; tips: single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only; item-by-item checklist was not in the paste, not invented; NOT yet pushed to GitHub |
+| Client onboarding & kickoff | `prospecting/sba-client-onboarding-kickoff-2026-11-23.md` | Saved 2026-11-23 — post-SOW, post-deposit; tips: single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only; item-by-item checklist was not in the paste, not invented; pushed 2026-11-23, commit 6e14eef4 |
+| 30-min kickoff call agenda | `prospecting/sba-kickoff-call-30min-2026-11-23.md` | Saved 2026-11-23 — Tier 2 kickoff, 5 timed blocks, sitemap + 3 workflows + access/compliance + dates locked, recap within 1–2 hrs; NOT yet pushed to GitHub |
 | Tier 2 SOW template | `prospecting/sba-sow-tier2-2026-11-23.md` | Saved 2026-11-23 — $7,500 in 3 milestones ($2,250 / $3,000 / $2,250), $650/mo care, 3–4 weeks, 2 revision rounds, 14-day bug cover; NOT legal advice, counsel review before sending |
 | 3-question ROI math | `prospecting/sba-roi-math-2026-11-23.md` | Saved 2026-11-23 — owner-supplied V × C × R, 2–3 recovered leads/mo covers $7,500 in ~1.7–3.3 months; use gross profit for sharp SBA owners, 6 hrs/wk @ $75/hr = ~$1,950/mo reclaimed |
 
@@ -131,6 +132,7 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 11. No reply in 3 days: send the 3-day follow-up nudge in the same thread (momentum or low-pressure pivot version). Still no reply after 4–5 more days: send the close-out email (down-sell or high-signal variation), mark the lead closed/paused in Supabase, stop chasing — thread stays open for them to revive.
 12. On a yes, send the Tier 2 SOW (after counsel review) — $2,250 deposit to reserve the slot, then $3,000 at staging, $2,250 at launch, $650/mo care from launch.
 13. After SOW signed + deposit clears: run client onboarding & kickoff — single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only, never plain email.
+14. Hold the 30-min kickoff call — ground rules, sitemap, 3 workflows + edge cases, access/compliance, lock staging + launch dates; send recap + onboarding checklist link within 1–2 hours.
 
 ## 12. Decisions owed
 

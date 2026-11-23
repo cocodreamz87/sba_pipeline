@@ -172,3 +172,9 @@ Saved: `outreach/sba-close-out-email-2026-11-23.md` — after recap + 3-day nudg
 ## Client onboarding & kickoff checklist (added 2026-11-23 04:23 ET)
 
 Saved: `sba-client-onboarding-kickoff-2026-11-23.md` — runs after SOW signed + deposit clears. Tips: single intake form + shared Drive/Notion/Airtable folder, flag SMS/A2P 10DLC Day 1, credentials via role/delegated permissions or password vault only — never plain email. Item-by-item checklist was not in the paste — not invented. Not yet pushed to GitHub.
+
+---
+
+## 30-min kickoff call agenda (added 2026-11-23 04:24 ET)
+
+Saved: `sba-kickoff-call-30min-2026-11-23.md` — Tier 2 kickoff, 5 timed blocks (welcome 0–4, sitemap 4–12, workflows 12–21, access/compliance 21–26, dates 26–30), lock pages, workflow rules + edge cases, access/assets, staging + launch dates; recap within 1–2 hours. Not yet pushed to GitHub.
