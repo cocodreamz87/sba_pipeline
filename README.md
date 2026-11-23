@@ -53,6 +53,7 @@ Step 3 is `sba_prospects.sql` — run it in the Supabase SQL Editor before Step 
 - `docs/sba-pricing-tiers-2026-11-23.md` — Tier 1 $3,500 / Tier 2 $7,500 + $650/mo / Tier 3 $14,500+ + $1,250/mo
 - `docs/sba-sow-tier2-2026-11-23.md` — Tier 2 Statement of Work template (not legal advice — counsel review before sending)
 - `docs/sba-roi-math-2026-11-23.md` — 3-question ROI math for the call
+- `docs/sba-client-onboarding-kickoff-2026-11-23.md` — client onboarding & kickoff after SOW + deposit
 - `docs/outreach/sba-change-of-ownership-outreach-2026-11-23.md` — Track A: 2 emails, call opener, voicemail
 - `docs/outreach/sba-pre-call-audit-10min-2026-11-23.md` — 10-min pre-call audit
 - `docs/outreach/sba-discovery-call-15min-2026-11-23.md` — 15-min discovery call script

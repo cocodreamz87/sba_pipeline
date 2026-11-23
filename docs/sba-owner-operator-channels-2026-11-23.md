@@ -166,3 +166,9 @@ Saved: `outreach/sba-discovery-call-notes-template-2026-11-23.md` — 3–5 min 
 ## Close-out email (added 2026-11-23 04:21 ET)
 
 Saved: `outreach/sba-close-out-email-2026-11-23.md` — after recap + 3-day nudge + 4–5 more days silence, close the folder cleanly, no guilt, thread stays open to revive. Variations: low-lift down-sell / later timing, high-signal soft exit naming their bottleneck. Mark closed/paused in Supabase/CRM. Not yet pushed to GitHub.
+
+---
+
+## Client onboarding & kickoff checklist (added 2026-11-23 04:23 ET)
+
+Saved: `sba-client-onboarding-kickoff-2026-11-23.md` — runs after SOW signed + deposit clears. Tips: single intake form + shared Drive/Notion/Airtable folder, flag SMS/A2P 10DLC Day 1, credentials via role/delegated permissions or password vault only — never plain email. Item-by-item checklist was not in the paste — not invented. Not yet pushed to GitHub.
