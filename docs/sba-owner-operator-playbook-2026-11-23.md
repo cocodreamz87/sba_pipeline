@@ -48,7 +48,12 @@ Top 50 accounts/month, 3-point surround sound.
 | Inbound reply webhook (n8n) | `prospecting/sba-lead-pipeline/sba-n8n-inbound-reply-workflow.json` (unsecured, 7 nodes) + `sba-n8n-inbound-reply-workflow-secured.json` (**canonical, 10 nodes**, shared-secret gate, 401/200) | Saved 2026-11-23 — JSON validated both; deterministic keyword classify, match by email/phone, idempotent insert; **BLOCKED: sba_outreach_touches + enums + trigger don't exist in schema yet**; pushed 2026-11-23, commit de09e6fe |
 | CF Worker webhook relay | `prospecting/sba-lead-pipeline/sba-webhook-relay-worker.js` (passthrough) + `sba-webhook-relay-worker-normalized.js` (parses JSON/form/Twilio, normalizes payload) + `sba-webhook-relay-wrangler.toml` | Saved 2026-11-23 — both JS syntax-checked OK; injects X-Webhook-Secret server-side, 8s timeout; set real N8N_WEBHOOK_URL before deploy; pushed 2026-11-23, commit de09e6fe |
 | Inbound reply webhook doc | `prospecting/sba-inbound-reply-webhook-2026-11-23.md` | Saved 2026-11-23 — flow, classification rules, guardrails, curl 401/200 test; pushed 2026-11-23, commit de09e6fe |
-| Staging build & demo email | `prospecting/outreach/sba-staging-build-demo-email-2026-11-23.md` | Saved 2026-11-23 — Tier 2 staging + 5–7 min walkthrough, review focus (pages/mobile + 3 workflows), one consolidated list by 5 business days, Milestone 2 $3,000 then launch/DNS; NOT yet pushed to GitHub |
+| Staging build & demo email | `prospecting/outreach/sba-staging-build-demo-email-2026-11-23.md` | Saved 2026-11-23 — Tier 2 staging + 5–7 min walkthrough, review focus (pages/mobile + 3 workflows), one consolidated list by 5 business days, Milestone 2 $3,000 then launch/DNS; pushed 2026-11-23, commit 548510cf |
+| Pre-launch QA checklist | `prospecting/sba-pre-launch-qa-checklist-2026-11-23.md` | Saved 2026-11-23 — **item list MISSING from paste (only guardrails saved)**; guardrails: prod endpoints, don't touch MX/SPF/DKIM, clean test records; NOT yet pushed to GitHub |
+| Launch & handoff email | `prospecting/outreach/sba-launch-handoff-email-2026-11-23.md` | Saved 2026-11-23 — go-live recap, 3 workflows, $650/mo care, 14-day check-in, support boundaries; NOT yet pushed to GitHub |
+| Bug vs. change order rule | `prospecting/sba-bug-vs-change-order-2026-11-23.md` | Saved 2026-11-23 — internal triage: bug fix needs all 3 conditions, change order if any of 3 apply, decision table, one-line responses; NOT yet pushed to GitHub |
+| Out-of-scope message | `prospecting/outreach/sba-out-of-scope-change-order-2026-11-23.md` | Saved 2026-11-23 — email + Slack versions, quote-before-build gate; NOT yet pushed to GitHub |
+| 14-day post-launch check-in | `prospecting/outreach/sba-14day-post-launch-checkin-2026-11-23.md` | Saved 2026-11-23 — email + Slack versions, lead/booking flow + edge cases, steady $650/mo care; pasted twice, saved once; NOT yet pushed to GitHub |
 | Tier 2 SOW template | `prospecting/sba-sow-tier2-2026-11-23.md` | Saved 2026-11-23 — $7,500 in 3 milestones ($2,250 / $3,000 / $2,250), $650/mo care, 3–4 weeks, 2 revision rounds, 14-day bug cover; NOT legal advice, counsel review before sending |
 | 3-question ROI math | `prospecting/sba-roi-math-2026-11-23.md` | Saved 2026-11-23 — owner-supplied V × C × R, 2–3 recovered leads/mo covers $7,500 in ~1.7–3.3 months; use gross profit for sharp SBA owners, 6 hrs/wk @ $75/hr = ~$1,950/mo reclaimed |
 
@@ -144,6 +149,9 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 14. Hold the 30-min kickoff call — ground rules, sitemap, 3 workflows + edge cases, access/compliance, lock staging + launch dates; send recap + onboarding checklist link within 1–2 hours.
 15. Send the post-kickoff recap email within 1–2 hours — agreed sitemap, 3 workflows, target dates, still-needed list only.
 16. Daily ops (once Supabase is live): 8am ET n8n Slack digest from the daily queue queries — due follow-ups first, uncontacted 60+ second. BLOCKED until v_sba_prospect_engagement is built.
+17. Pre-launch: run the QA checklist, point every form/webhook to production, don't touch MX/SPF/DKIM, clean test records, then flip DNS.
+18. Launch: send the launch & handoff email (live URL, 3 workflows, $650/mo care, 14-day check-in date, support boundaries).
+19. Post-launch: triage requests with the bug-vs-change-order rule; out-of-scope asks get the change-order message + quote before any build; send the 14-day check-in.
 
 ## 12. Decisions owed
 

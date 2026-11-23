@@ -207,3 +207,15 @@ FLAG: BLOCKED — `sba_outreach_touches` + enums + trigger do NOT exist in `sba_
 ## Staging build & workflow demo email (added 2026-11-23 04:31 ET)
 
 Saved `outreach/sba-staging-build-demo-email-2026-11-23.md` — Tier 2 staging site + 5–7 min walkthrough, review focus (pages/mobile flow + 3 workflows), feedback as one consolidated list within 5 business days, Milestone 2 $3,000 settled then production launch + DNS cutover. Tip: anchor feedback to page URLs + workflow names (Workflow 1 / 2 / 3). Not pushed to GitHub yet.
+
+---
+
+## Pre-launch QA + launch/handoff + scope rules + 14-day check-in (added 2026-11-23 04:35 ET)
+
+Saved 5 files:
+- `sba-pre-launch-qa-checklist-2026-11-23.md` — FLAG: item-by-item checklist NOT in the paste (only guardrails: prod endpoints, don't touch MX/SPF/DKIM, clean test records). Send the items when you have them.
+- `outreach/sba-launch-handoff-email-2026-11-23.md` — go-live recap, 3 workflows, $650/mo care, 14-day check-in, support boundaries.
+- `sba-bug-vs-change-order-2026-11-23.md` — internal triage: bug fix = all 3 conditions, change order = any of 3, decision table, one-line responses.
+- `outreach/sba-out-of-scope-change-order-2026-11-23.md` — email + Slack versions, quote-before-build gate.
+- `outreach/sba-14day-post-launch-checkin-2026-11-23.md` — email + Slack versions; pasted twice in the same turn, saved once.
+Runbook now ends at step 19. None of the 5 pushed to GitHub yet.
