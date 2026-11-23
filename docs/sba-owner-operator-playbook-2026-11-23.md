@@ -41,7 +41,10 @@ Top 50 accounts/month, 3-point surround sound.
 | Post-discovery call notes | `prospecting/outreach/sba-discovery-call-notes-template-2026-11-23.md` | Saved 2026-11-23 — 3–5 min template: bottlenecks + verbatim quotes, ROI inputs, tier alignment + next step — pushed 2026-11-23, commit 1e9f786e |
 | Close-out email | `prospecting/outreach/sba-close-out-email-2026-11-23.md` | Saved 2026-11-23 — after recap + nudge + 4–5 days silence, down-sell + high-signal variations, mark closed/paused in Supabase — pushed 2026-11-23, commit 1e9f786e |
 | Client onboarding & kickoff | `prospecting/sba-client-onboarding-kickoff-2026-11-23.md` | Saved 2026-11-23 — post-SOW, post-deposit; tips: single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only; item-by-item checklist was not in the paste, not invented; pushed 2026-11-23, commit 6e14eef4 |
-| 30-min kickoff call agenda | `prospecting/sba-kickoff-call-30min-2026-11-23.md` | Saved 2026-11-23 — Tier 2 kickoff, 5 timed blocks, sitemap + 3 workflows + access/compliance + dates locked, recap within 1–2 hrs; NOT yet pushed to GitHub |
+| 30-min kickoff call agenda | `prospecting/sba-kickoff-call-30min-2026-11-23.md` | Saved 2026-11-23 — Tier 2 kickoff, 5 timed blocks, sitemap + 3 workflows + access/compliance + dates locked, recap within 1–2 hrs; pushed 2026-11-23, commit bccd4715 |
+| Daily queue SQL | `prospecting/sba-lead-pipeline/sba-daily-queue-queries.sql` | Saved 2026-11-23 — due nudges, uncontacted 60+ (limit 25), combined queue; **BLOCKED: needs v_sba_prospect_engagement view + 'ready' status, neither in schema yet**; NOT yet pushed to GitHub |
+| Post-kickoff recap email | `prospecting/outreach/sba-post-kickoff-recap-email-2026-11-23.md` | Saved 2026-11-23 — send within 1–2 hrs of kickoff, sitemap + 3 workflows + dates + still-needed list; NOT yet pushed to GitHub |
+| n8n morning queue workflow | `prospecting/sba-lead-pipeline/sba-n8n-morning-queue-workflow.json` | Saved 2026-11-23 — JSON validated, 5 nodes, 8am M–F ET, Postgres → digest → Slack #sba-outreach; **BLOCKED on the same missing engagement view**; NOT yet pushed to GitHub |
 | Tier 2 SOW template | `prospecting/sba-sow-tier2-2026-11-23.md` | Saved 2026-11-23 — $7,500 in 3 milestones ($2,250 / $3,000 / $2,250), $650/mo care, 3–4 weeks, 2 revision rounds, 14-day bug cover; NOT legal advice, counsel review before sending |
 | 3-question ROI math | `prospecting/sba-roi-math-2026-11-23.md` | Saved 2026-11-23 — owner-supplied V × C × R, 2–3 recovered leads/mo covers $7,500 in ~1.7–3.3 months; use gross profit for sharp SBA owners, 6 hrs/wk @ $75/hr = ~$1,950/mo reclaimed |
 
@@ -116,6 +119,7 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 8. **No direct-mail asset** — postcard / 1-page audit snapshot is strategy only; no design, no print/mail vendor, no cost.
 9. **No Supabase project confirmed** — schema not run, URL/key not in `.env`, no project ref on record. The existing Supabase RLS exposure goal (`supabase-orange-grass`) is separate and unresolved — do not confuse the two projects.
 10. **States are script-only** — GA/FL/TX/NC/TN appears only in `process-sba.js` CONFIG, not in the strategy notes. Atlanta/GA is the stated primary; the other four are an expansion choice that was never explicitly decided.
+11. **Engagement view missing** — daily queue SQL + n8n workflow depend on `v_sba_prospect_engagement` (total_touches, email/call counts, inbound_replies, latest_outcome) and an outreach status `'ready'`; neither exists in `sba_prospects.sql`. Build the engagement tracking (table/view + touch logging) before running either, or both fail.
 
 ## 11. Runbook — in order
 
@@ -133,6 +137,8 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 12. On a yes, send the Tier 2 SOW (after counsel review) — $2,250 deposit to reserve the slot, then $3,000 at staging, $2,250 at launch, $650/mo care from launch.
 13. After SOW signed + deposit clears: run client onboarding & kickoff — single intake form + shared folder, flag A2P 10DLC Day 1, credentials via vault/delegated access only, never plain email.
 14. Hold the 30-min kickoff call — ground rules, sitemap, 3 workflows + edge cases, access/compliance, lock staging + launch dates; send recap + onboarding checklist link within 1–2 hours.
+15. Send the post-kickoff recap email within 1–2 hours — agreed sitemap, 3 workflows, target dates, still-needed list only.
+16. Daily ops (once Supabase is live): 8am ET n8n Slack digest from the daily queue queries — due follow-ups first, uncontacted 60+ second. BLOCKED until v_sba_prospect_engagement is built.
 
 ## 12. Decisions owed
 

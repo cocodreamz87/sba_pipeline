@@ -178,3 +178,13 @@ Saved: `sba-client-onboarding-kickoff-2026-11-23.md` — runs after SOW signed +
 ## 30-min kickoff call agenda (added 2026-11-23 04:24 ET)
 
 Saved: `sba-kickoff-call-30min-2026-11-23.md` — Tier 2 kickoff, 5 timed blocks (welcome 0–4, sitemap 4–12, workflows 12–21, access/compliance 21–26, dates 26–30), lock pages, workflow rules + edge cases, access/assets, staging + launch dates; recap within 1–2 hours. Not yet pushed to GitHub.
+
+---
+
+## Daily queue SQL + post-kickoff recap + n8n workflow (added 2026-11-23 04:27 ET)
+
+Saved 3 files:
+- `sba-lead-pipeline/sba-daily-queue-queries.sql` — due follow-up nudges, uncontacted high-score (60+, limit 25), combined queue with FOLLOWUP_DUE / NEW_HIGH_SCORE buckets, ET end-of-day filter, best-email/phone fallback.
+- `outreach/sba-post-kickoff-recap-email-2026-11-23.md` — send within 1–2 hrs of kickoff, sitemap + 3 workflows + dates + still-needed list only.
+- `sba-lead-pipeline/sba-n8n-morning-queue-workflow.json` — JSON validated, 5 nodes (8am M–F ET trigger, 2 Postgres queries capped 15 each, deterministic digest builder, Slack #sba-outreach), import via Workflow → Import from JSON, attach Postgres + Slack credentials, set instance timezone America/New_York.
+FLAG: daily queries + n8n both depend on `v_sba_prospect_engagement`, which does NOT exist in `sba_prospects.sql`, and status `'ready'` is not in the outreach enum. Build engagement tracking first or both fail. None of the 3 pushed to GitHub yet.
