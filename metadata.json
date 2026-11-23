@@ -1,0 +1,5 @@
+{
+  "name": "SBA Pipeline — Tier 2 Care & Lead Ops",
+  "description": "Tier 2 B2B lead generation and automation operations console using Make, Neon PostgreSQL, Airtable, Slack, and Cloudflare Worker edge ingress.",
+  "requestFramePermissions": []
+}

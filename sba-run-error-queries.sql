@@ -1,16 +1,8 @@
--- SBA Workflow Run & Error Queries
--- Saved 2026-11-23, pasted by Demetrius.
---
--- FLAG — BLOCKED: queries 1, 3, 5 depend on public.sba_outreach_touches,
--- which does NOT exist in sba_prospects.sql. Queries 2, 4, 6 depend on
--- public.automation_runs, a dedicated execution-log table that does not
--- exist anywhere yet — build it (workflow_name, status, error_message,
--- created_at) before running those. Do not run against live Supabase until then.
---
--- Tips: use count(*) filter (where ...) so totals and errors come from one
--- aggregation pass; nullif(count(*), 0) avoids divide-by-zero; keep
--- status/outcome strings normalized (success, failed, replied_interested,
--- replied_not_now, replied_not_fit) so counts stay deterministic.
+-- ============================================================================
+-- SBA Make Scenario Run & Error Queries (Neon PostgreSQL)
+-- Runnable against public.automation_runs and public.sba_outreach_touches.
+-- Uses single-pass COUNT(*) FILTER (WHERE ...) and NULLIF(..., 0).
+-- ============================================================================
 
 -- ============================================================================
 -- 1. Runs & errors by sequence_name — public.sba_outreach_touches, last 30 days
@@ -42,7 +34,7 @@ group by 1
 order by error_count desc, total_runs desc;
 
 -- ============================================================================
--- 2. Runs & errors by workflow_name — public.automation_runs, current month (ET)
+-- 2. Make scenario runs & errors by workflow_name — current month (ET)
 -- ============================================================================
 select
   coalesce(nullif(btrim(workflow_name), ''), 'unnamed_workflow') as workflow_name,
@@ -54,6 +46,7 @@ select
     / nullif(count(*), 0),
     2
   ) as error_rate_pct,
+  round(avg(duration_ms)) as avg_duration_ms,
   max(created_at) as last_run_at,
   max(error_message) filter (where lower(status) in ('error', 'failed', 'timeout', 'rejected')) as latest_error_message
 from public.automation_runs
@@ -62,15 +55,20 @@ group by 1
 order by error_count desc, total_runs desc;
 
 -- ============================================================================
--- 3. 20 most recent failed runs — public.automation_runs
+-- 3. 20 most recent failed Make runs — public.automation_runs
 -- ============================================================================
 select
   id,
-  created_at at time zone 'America/New_York' as occurred_at_et,
-  created_at as occurred_at_utc,
+  execution_id,
+  client_slug,
+  workflow_id,
   coalesce(nullif(btrim(workflow_name), ''), 'unnamed_workflow') as workflow_name,
+  coalesce(nullif(btrim(failed_node), ''), 'unknown_module') as failed_node,
   status,
-  coalesce(nullif(btrim(error_message), ''), 'No error message recorded') as error_message
+  coalesce(nullif(btrim(error_message), ''), 'No error message recorded') as error_message,
+  execution_url,
+  created_at at time zone 'America/New_York' as occurred_at_et,
+  created_at as occurred_at_utc
 from public.automation_runs
 where lower(btrim(status)) in ('error', 'failed', 'timeout', 'rejected')
 order by created_at desc
@@ -103,7 +101,7 @@ order by t.occurred_at desc
 limit 20;
 
 -- ============================================================================
--- 5. Failed runs grouped by workflow & error — public.automation_runs, last 7 days
+-- 5. Failed Make runs grouped by workflow & error — last 7 days
 -- ============================================================================
 select
   coalesce(nullif(btrim(workflow_name), ''), 'unnamed_workflow') as workflow_name,
@@ -118,7 +116,7 @@ group by 1, 2
 order by failure_count desc, last_seen_et desc;
 
 -- ============================================================================
--- 6. Failed touches grouped by sequence & error — public.sba_outreach_touches, last 7 days
+-- 6. Failed touches grouped by sequence & error — last 7 days
 -- ============================================================================
 select
   coalesce(nullif(btrim(sequence_name), ''), 'unassigned_sequence') as workflow_name,
@@ -140,9 +138,3 @@ where occurred_at >= now() - interval '7 days'
   )
 group by 1, 2
 order by failure_count desc, last_seen_et desc;
-
--- Guardrails: show both ET and UTC to correlate with n8n logs, Slack alerts,
--- and cron schedules (08:00 AM ET). failure_count >= 2 over 7 days = candidate
--- for a permanent workflow guard (retry backoff, payload validation, token fix).
--- Tight first/last window = transient outage/rate limit; errors spanning days =
--- broken credential, webhook URL, or schema mismatch.

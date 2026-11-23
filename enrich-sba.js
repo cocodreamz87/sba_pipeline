@@ -346,12 +346,20 @@ async function run() {
       const placeData = await lookupPlaceDetails(row);
       const siteData = await auditWebsite(placeData.website_url);
 
-      // Boost priority if high review volume + missing booking or acquisition flag
-      let compositeScore = siteData.lead_priority_score;
-      if (placeData.google_review_count >= 50 && siteData.has_booking_link === 'FALSE') {
+      // Align scoring deterministically with Neon Postgres computed_lead_score
+      let compositeScore =
+        siteData.site_status === 'NO_WEBSITE'
+          ? 80
+          : siteData.site_status === 'TIMEOUT' || siteData.site_status === 'FETCH_ERROR'
+            ? 70
+            : siteData.lead_priority_score;
+      if (Number(placeData.google_review_count) >= 50 && siteData.has_booking_link === 'FALSE') {
         compositeScore = Math.min(compositeScore + 10, 100);
       }
       if (row.is_acquisition === 'TRUE') {
+        compositeScore = Math.min(compositeScore + 5, 100);
+      }
+      if (Number(row.gross_approval) >= 500_000) {
         compositeScore = Math.min(compositeScore + 5, 100);
       }
 

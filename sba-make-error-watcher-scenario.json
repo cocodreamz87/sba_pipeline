@@ -1,0 +1,72 @@
+{
+  "name": "ops_global | make_error_watcher_logger",
+  "platform": "Make",
+  "trigger": {
+    "module": "gateway:CustomWebHook",
+    "name": "Receive Scenario Error Event",
+    "notes": "Called by Break/Error Handler routes across all client Make scenarios."
+  },
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "name": "Receive Make Error Payload"
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariables",
+      "name": "Normalize client_slug | workflow_name & Status",
+      "logic": "Splits scenario.name on '|', sets status = 'timeout' if error mentions timeout else 'failed', truncates error_message to 1000 chars."
+    },
+    {
+      "id": 3,
+      "module": "postgres:ExecuteQuery",
+      "name": "Neon — Idempotent Insert into automation_runs",
+      "parameters": {
+        "connection": "NEON_POSTGRES_CONNECTION",
+        "sql": "insert into public.automation_runs (execution_id, client_slug, workflow_id, workflow_name, failed_node, status, error_message, execution_url, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, now()) on conflict (execution_id) do nothing;"
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "name": "Slack — Immediate Ops Failure Alert",
+      "parameters": {
+        "url": "{{env.SLACK_WEBHOOK_URL}}",
+        "method": "POST",
+        "body": {
+          "text": "[{{2.client_slug}}] {{2.workflow_name}} failed at {{2.failed_node}}",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Make Failure Alert* — `{{2.client_slug}}`\n*Scenario:* `{{2.workflow_name}}` | *Module:* `{{2.failed_node}}`\n*Error:* {{2.error_message}}"
+              },
+              "accessory": {
+                "type": "button",
+                "text": { "type": "plain_text", "text": "Open Execution" },
+                "url": "{{2.execution_url || 'https://us1.make.com'}}"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "airtable:CreateRecord",
+      "name": "Airtable — Log Care Incident Row (Optional)",
+      "baseId": "{{env.AIRTABLE_BASE_ID}}",
+      "table": "Tier 2 Care Incidents",
+      "fields": {
+        "Execution ID": "{{2.execution_id}}",
+        "Client": "{{2.client_slug}}",
+        "Scenario": "{{2.workflow_name}}",
+        "Failed Module": "{{2.failed_node}}",
+        "Status": "{{2.status}}",
+        "Error Summary": "{{2.error_message}}"
+      }
+    }
+  ]
+}

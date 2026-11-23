@@ -1,1 +1,37 @@
-{"dependencies":{"@supabase/supabase-js":"^2.119.2","csv-parse":"^5.6.0","csv-stringify":"^6.5.0","dotenv":"^18.0.10"},"description":"Stream, normalize, filter, and deduplicate SBA 7(a) and 504 FOIA CSVs into qualified owner-operator leads.","name":"sba-lead-pipeline","private":true,"scripts":{"enrich":"node enrich-sba.js","start":"node process-sba.js","sync":"node sync-sba-supabase.js"},"type":"module","version":"1.0.0"}
+{
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.0",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "lucide-react": "^1.78.0",
+    "pg": "^8.23.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  },
+  "description": "Stream, normalize, filter, and deduplicate SBA 7(a) and 504 FOIA CSVs into qualified owner-operator leads.",
+  "name": "sba-lead-pipeline",
+  "private": true,
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "start": "NODE_ENV=production tsx server.ts",
+    "lint": "tsc --noEmit",
+    "process": "node process-sba.js",
+    "enrich": "node enrich-sba.js",
+    "sync": "node sync-sba-neon.js"
+  },
+  "type": "module",
+  "version": "1.0.0"
+}

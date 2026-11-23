@@ -1,0 +1,70 @@
+{
+  "name": "coco_club_live | wf1_morning_queue_slack_digest",
+  "platform": "Make",
+  "schedule": {
+    "cron": "0 8 * * 1-5",
+    "timezone": "America/New_York"
+  },
+  "flow": [
+    {
+      "id": 1,
+      "module": "postgres:ExecuteQuery",
+      "name": "Neon — Get Due Follow-Ups (limit 15)",
+      "parameters": {
+        "connection": "NEON_POSTGRES_CONNECTION",
+        "sql": "select e.prospect_id, e.borr_name, p.is_acquisition, p.gross_approval, e.borr_city, e.borr_state, e.campaign_track, e.computed_lead_score, e.outreach_status, e.total_touches, e.latest_outcome, e.next_followup_at, coalesce(nullif(btrim(e.owner_email), ''), '') as best_email, coalesce(nullif(btrim(e.owner_phone), ''), nullif(btrim(e.google_phone), ''), '') as best_phone, p.website_url, p.friction_tags from public.v_sba_prospect_engagement e join public.sba_prospects p on p.id = e.prospect_id where e.outreach_status not in ('booked', 'won', 'archived', 'disqualified') and e.next_followup_at is not null and e.next_followup_at <= (date_trunc('day', now() at time zone 'America/New_York') + interval '1 day') at time zone 'America/New_York' order by e.next_followup_at asc, e.computed_lead_score desc, p.is_acquisition desc limit 15;"
+      }
+    },
+    {
+      "id": 2,
+      "module": "postgres:ExecuteQuery",
+      "name": "Neon — Get Uncontacted High-Score Leads (60+, limit 15)",
+      "parameters": {
+        "connection": "NEON_POSTGRES_CONNECTION",
+        "sql": "select e.prospect_id, e.borr_name, p.is_acquisition, p.gross_approval, p.google_review_count, e.borr_city, e.borr_state, e.campaign_track, e.computed_lead_score, e.outreach_status, p.website_url, p.friction_tags, coalesce(nullif(btrim(e.owner_email), ''), '') as best_email, coalesce(nullif(btrim(e.owner_phone), ''), nullif(btrim(e.google_phone), ''), '') as best_phone from public.v_sba_prospect_engagement e join public.sba_prospects p on p.id = e.prospect_id where e.total_touches = 0 and e.outreach_status in ('new', 'enriched', 'ready') and e.computed_lead_score >= 60 order by e.computed_lead_score desc, p.is_acquisition desc, p.gross_approval desc, p.google_review_count desc limit 15;"
+      }
+    },
+    {
+      "id": 3,
+      "module": "util:TextAggregator",
+      "name": "Format Deterministic Slack Block Digest",
+      "notes": "Joins Module 1 (due nudges) and Module 2 (new high-score leads) into a single Slack Block Kit payload."
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "name": "Slack — Post #sba-outreach Digest",
+      "parameters": {
+        "url": "{{env.SLACK_WEBHOOK_URL}}",
+        "method": "POST",
+        "headers": [{ "name": "Content-Type", "value": "application/json" }],
+        "body": {
+          "text": "SBA Morning Queue — Due Follow-Ups: {{length(1)}} | High-Score New: {{length(2)}}",
+          "blocks": "{{3.blocks}}"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "postgres:ExecuteQuery",
+      "name": "Neon — Log Execution to automation_runs",
+      "parameters": {
+        "connection": "NEON_POSTGRES_CONNECTION",
+        "sql": "insert into public.automation_runs (execution_id, client_slug, workflow_id, workflow_name, status, records_processed, error_message, execution_url) values ($1, 'coco_club_live', $2, 'wf1_morning_queue_slack_digest', 'success', $3, '', $4) on conflict (execution_id) do nothing;"
+      }
+    }
+  ],
+  "errorHandler": {
+    "directive": "Resume/Break -> Route to Error Watcher Webhook",
+    "fallbackModule": {
+      "module": "http:ActionSendData",
+      "url": "{{env.MAKE_ERROR_WATCHER_WEBHOOK_URL}}",
+      "body": {
+        "scenario": { "id": "{{var.scenario.id}}", "name": "{{var.scenario.name}}" },
+        "execution": { "id": "{{var.scenario.executionId}}", "url": "{{var.scenario.executionUrl}}" },
+        "module": { "name": "{{error.module}}" },
+        "error": { "message": "{{error.message}}" }
+      }
+    }
+  }
+}

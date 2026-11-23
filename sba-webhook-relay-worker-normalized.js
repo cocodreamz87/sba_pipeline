@@ -11,7 +11,6 @@ function extractEmail(raw) {
       (typeof raw.from === 'string' && raw.from.includes('@') ? raw.from : '') ||
       (typeof raw.sender === 'string' && raw.sender.includes('@') ? raw.sender : '')
   );
-  // Extracts bare email from "Display Name <user@domain.com>" if present
   const match = candidate.match(/<([^>\s]+@[^>\s]+)>/) || candidate.match(/([^\s<>]+@[^\s<>]+\.[^\s<>]+)/);
   return (match ? match[1] : candidate).trim().toLowerCase();
 }
@@ -86,7 +85,6 @@ async function parseIncomingBody(request) {
 
   if (contentType.includes('application/json') || rawText.trim().startsWith('{')) {
     const parsed = JSON.parse(rawText);
-    // Unwrap common webhook envelopes like { data: { ... } } or { payload: { ... } }
     if (parsed && typeof parsed === 'object') {
       if (parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data)) {
         return { ...parsed, ...parsed.data };
@@ -120,7 +118,10 @@ export default {
       }
     }
 
-    if (!env.N8N_WEBHOOK_URL || !env.N8N_WEBHOOK_SECRET) {
+    const targetUrl = env.MAKE_WEBHOOK_URL;
+    const webhookSecret = env.MAKE_WEBHOOK_SECRET || env.SBA_WEBHOOK_SECRET;
+
+    if (!targetUrl || !webhookSecret) {
       return new Response(JSON.stringify({ error: 'Missing Worker configuration' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -169,11 +170,11 @@ export default {
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
-      const upstreamResponse = await fetch(env.N8N_WEBHOOK_URL, {
+      const upstreamResponse = await fetch(targetUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Webhook-Secret': env.N8N_WEBHOOK_SECRET,
+          'X-Webhook-Secret': webhookSecret,
           'X-Forwarded-By': 'cloudflare-worker-relay',
         },
         body: JSON.stringify(normalizedPayload),
@@ -195,7 +196,7 @@ export default {
       const isTimeout = err?.name === 'AbortError';
       return new Response(
         JSON.stringify({
-          error: isTimeout ? 'Upstream n8n timeout' : 'Failed to forward webhook',
+          error: isTimeout ? 'Upstream Make webhook timeout' : 'Failed to forward webhook',
         }),
         {
           status: isTimeout ? 504 : 502,

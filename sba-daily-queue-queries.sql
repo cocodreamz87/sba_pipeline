@@ -1,22 +1,12 @@
--- SBA Daily Outbound Queue Queries
--- Saved 2026-11-23, pasted by Demetrius.
--- Against public.v_sba_prospect_engagement and public.sba_prospects.
---
--- FLAG — NOT YET RUNNABLE AS-IS: v_sba_prospect_engagement does NOT exist
--- in sba_prospects.sql (only v_high_priority_sba_queue exists), and the
--- outreach_status enum has no 'ready' value (enum: new, enriched,
--- audit_queued, contacted, replied, booked, won, disqualified, archived).
--- The view / engagement tracking (total_touches, email_count,
--- call_and_vm_count, inbound_replies, latest_outcome) must be built first,
--- or these queries will fail. Do not run against live Supabase until then.
---
+-- ============================================================================
+-- SBA Daily Outbound Queue Queries (Neon PostgreSQL)
+-- Runnable against public.v_sba_prospect_engagement and public.sba_prospects.
 -- Timezone: due-date filters anchor to end of today in America/New_York.
 -- Best contact fallback: owner_phone -> google_phone, owner_email as-is.
+-- ============================================================================
 
 -- ============================================================================
 -- 1. Today's Due Follow-Up Nudges
--- Leads already touched whose next_followup_at is due today or overdue,
--- excluding booked/won/archived/disqualified.
 -- ============================================================================
 select
   e.prospect_id,
@@ -51,9 +41,7 @@ order by
   p.is_acquisition desc;
 
 -- ============================================================================
--- 2. Uncontacted High-Score Leads
--- total_touches = 0, ready for initial outreach, score >= 60.
--- Limit 25.
+-- 2. Uncontacted High-Score Leads (total_touches = 0, score >= 60, limit 25)
 -- ============================================================================
 select
   e.prospect_id,
@@ -77,7 +65,7 @@ from public.v_sba_prospect_engagement e
 join public.sba_prospects p on p.id = e.prospect_id
 where e.total_touches = 0
   and e.outreach_status in ('new', 'enriched', 'ready')
-  and e.computed_lead_score >= 60 -- adjust threshold as needed
+  and e.computed_lead_score >= 60
 order by
   e.computed_lead_score desc,
   p.is_acquisition desc,
@@ -87,7 +75,6 @@ limit 25;
 
 -- ============================================================================
 -- 3. Combined Daily Outbound Queue (Follow-Ups + New High-Score Leads)
--- Due follow-up nudges first, top uncontacted leads second, with queue_bucket.
 -- ============================================================================
 with due_nudges as (
   select

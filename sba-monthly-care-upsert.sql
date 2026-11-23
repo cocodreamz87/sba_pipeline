@@ -1,23 +1,12 @@
--- Monthly Care Upsert — public.automation_runs -> public.tier2_monthly_care_logs
--- Saved 2026-11-23, pasted by Demetrius.
---
--- Aggregates runs for the current calendar month (America/New_York month
--- boundary) and upserts on conflict (client_slug, care_month).
--- SAFE: only workflow counts, error counts, top_error_summary, updated_at
--- are refreshed — site_uptime_pct, care_tweaks_*, change_orders_* are left
--- intact. Idempotent: rerun daily or at month-end, no duplicate rows.
---
--- FLAG — BLOCKED: depends on public.automation_runs and
--- public.tier2_monthly_care_logs. Neither table exists in live Supabase yet
--- (schemas saved: sba-automation-runs-schema.sql, sba-care-metrics-schema.sql).
--- Do not run against live Supabase until both are created.
+-- Monthly Care Upsert — public.automation_runs -> public.tier2_monthly_care_logs (Neon PostgreSQL)
+-- Aggregates runs for the current calendar month (America/New_York month boundary)
+-- and upserts on conflict (client_slug, care_month).
+-- Preserves site_uptime_pct, care_tweaks_*, and change_orders_* columns.
 --
 -- Workflow mapping (case-insensitive, by workflow_name):
 --   wf1: wf1 / workflow_1 / speed_to_lead / lead_routing / like '%lead%'
 --   wf2: wf2 / workflow_2 / booking_reminders / appointments / like '%book%' or '%remind%'
 --   wf3: wf3 / workflow_3 / review_followup / follow_up / like '%follow%' or '%review%'
--- top_error_summary = most frequent error message that month (ties broken by
--- most recent), 'None' when zero errors.
 with monthly_stats as (
   select
     coalesce(nullif(btrim(client_slug), ''), 'default_client') as client_slug,

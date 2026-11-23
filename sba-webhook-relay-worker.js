@@ -1,5 +1,5 @@
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
@@ -7,7 +7,6 @@ export default {
       });
     }
 
-    // Optional ingress guard if you also want callers to pass a relay token
     if (env.RELAY_INGRESS_TOKEN) {
       const incomingToken = (request.headers.get('x-relay-token') || '').trim();
       if (incomingToken !== env.RELAY_INGRESS_TOKEN) {
@@ -18,7 +17,10 @@ export default {
       }
     }
 
-    if (!env.N8N_WEBHOOK_URL || !env.N8N_WEBHOOK_SECRET) {
+    const targetUrl = env.MAKE_WEBHOOK_URL;
+    const webhookSecret = env.MAKE_WEBHOOK_SECRET || env.SBA_WEBHOOK_SECRET;
+
+    if (!targetUrl || !webhookSecret) {
       return new Response(JSON.stringify({ error: 'Missing Worker configuration' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -32,11 +34,11 @@ export default {
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
-      const upstreamResponse = await fetch(env.N8N_WEBHOOK_URL, {
+      const upstreamResponse = await fetch(targetUrl, {
         method: 'POST',
         headers: {
           'Content-Type': contentType,
-          'X-Webhook-Secret': env.N8N_WEBHOOK_SECRET,
+          'X-Webhook-Secret': webhookSecret,
           'X-Forwarded-By': 'cloudflare-worker-relay',
         },
         body: rawBody,
@@ -55,7 +57,7 @@ export default {
       const isTimeout = err?.name === 'AbortError';
       return new Response(
         JSON.stringify({
-          error: isTimeout ? 'Upstream n8n timeout' : 'Failed to forward webhook',
+          error: isTimeout ? 'Upstream Make webhook timeout' : 'Failed to forward webhook',
         }),
         {
           status: isTimeout ? 504 : 502,
