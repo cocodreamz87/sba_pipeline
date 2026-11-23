@@ -55,8 +55,14 @@ Step 3 is `sba_prospects.sql` — run it in the Supabase SQL Editor before Step 
 - `docs/sba-roi-math-2026-11-23.md` — 3-question ROI math for the call
 - `docs/sba-client-onboarding-kickoff-2026-11-23.md` — client onboarding & kickoff after SOW + deposit
 - `docs/sba-kickoff-call-30min-2026-11-23.md` — 30-min Tier 2 kickoff call agenda
+- `docs/sba-inbound-reply-webhook-2026-11-23.md` — inbound reply webhook flow, classification rules, curl test
 - `sba-daily-queue-queries.sql` — daily outbound queue SQL (due nudges, uncontacted 60+, combined)
 - `sba-n8n-morning-queue-workflow.json` — n8n 8am M–F Slack digest workflow (importable JSON)
+- `sba-n8n-inbound-reply-workflow.json` — n8n inbound reply webhook (unsecured, 7 nodes)
+- `sba-n8n-inbound-reply-workflow-secured.json` — n8n inbound reply webhook (canonical, 10 nodes, shared-secret gate)
+- `sba-webhook-relay-worker.js` — Cloudflare Worker webhook relay (passthrough)
+- `sba-webhook-relay-worker-normalized.js` — Cloudflare Worker webhook relay (normalizes JSON/form/Twilio payloads)
+- `sba-webhook-relay-wrangler.toml` — Worker config (set real N8N_WEBHOOK_URL before deploy)
 - `docs/outreach/sba-change-of-ownership-outreach-2026-11-23.md` — Track A: 2 emails, call opener, voicemail
 - `docs/outreach/sba-pre-call-audit-10min-2026-11-23.md` — 10-min pre-call audit
 - `docs/outreach/sba-discovery-call-15min-2026-11-23.md` — 15-min discovery call script

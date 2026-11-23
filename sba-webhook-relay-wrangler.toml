@@ -1,0 +1,6 @@
+name = "sba-webhook-relay"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+N8N_WEBHOOK_URL = "https://your-n8n-host/webhook/sba-inbound-reply"

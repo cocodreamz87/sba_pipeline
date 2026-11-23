@@ -188,3 +188,16 @@ Saved 3 files:
 - `outreach/sba-post-kickoff-recap-email-2026-11-23.md` — send within 1–2 hrs of kickoff, sitemap + 3 workflows + dates + still-needed list only.
 - `sba-lead-pipeline/sba-n8n-morning-queue-workflow.json` — JSON validated, 5 nodes (8am M–F ET trigger, 2 Postgres queries capped 15 each, deterministic digest builder, Slack #sba-outreach), import via Workflow → Import from JSON, attach Postgres + Slack credentials, set instance timezone America/New_York.
 FLAG: daily queries + n8n both depend on `v_sba_prospect_engagement`, which does NOT exist in `sba_prospects.sql`, and status `'ready'` is not in the outreach enum. Build engagement tracking first or both fail. None of the 3 pushed to GitHub yet.
+
+---
+
+## Inbound reply webhook + CF Worker relay (added 2026-11-23 04:30 ET)
+
+Saved 6 files:
+- `sba-lead-pipeline/sba-n8n-inbound-reply-workflow.json` — unsecured, 7 nodes, JSON validated.
+- `sba-lead-pipeline/sba-n8n-inbound-reply-workflow-secured.json` — CANONICAL, 10 nodes, shared-secret gate (X-Webhook-Secret vs $env.SBA_WEBHOOK_SECRET), 401/200, JSON validated.
+- `sba-lead-pipeline/sba-webhook-relay-worker.js` — passthrough relay, syntax OK.
+- `sba-lead-pipeline/sba-webhook-relay-worker-normalized.js` — parses JSON/form-urlencoded (Twilio)/{data}/{payload}, normalizes to {channel, from_email, from_phone, subject, text, event_id, occurred_at}, syntax OK.
+- `sba-lead-pipeline/sba-webhook-relay-wrangler.toml` — set real N8N_WEBHOOK_URL before deploy; secrets via `wrangler secret put N8N_WEBHOOK_SECRET` (+ optional RELAY_INGRESS_TOKEN).
+- `sba-inbound-reply-webhook-2026-11-23.md` — flow, classification rules, guardrails, curl 401/200 test.
+FLAG: BLOCKED — `sba_outreach_touches` + enums + trigger do NOT exist in `sba_prospects.sql` (checked 2026-11-23). Build touches table + enums + trigger together with the engagement view before importing/activating. None of the 6 pushed to GitHub yet.
