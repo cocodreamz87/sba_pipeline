@@ -142,3 +142,27 @@ Saved: `sba-sow-tier2-2026-11-23.md` — $7,500 in 3 milestones ($2,250 kickoff 
 ## 3-question ROI math (added 2026-11-23 04:15 ET)
 
 Saved: `sba-roi-math-2026-11-23.md` — Q1 avg deal value, Q2 close rate, Q3 leads slipping/month; Recovered Revenue = Leads × Close Rate × Avg Value; Payback = $7,500 / monthly recovered revenue (or gross profit). Examples: $1,500×50%×3 leads = $2,250/mo, ~3.3 mo; $3,000×40%×2.5 = $3,000/mo, 2.5 mo; $5,000×30%×3 = $4,500/mo, ~1.7 mo. Use in discovery Phase 3 or the Scope session, before tiers. Tip: 6 hrs/wk manual follow-up at $75/hr = ~$1,950/mo reclaimed capacity.
+
+---
+
+## 10-min pre-call audit (added 2026-11-23 04:16 ET)
+
+Saved: `outreach/sba-pre-call-audit-10min-2026-11-23.md` — turn audit notes into 3 sharp questions (SBA context, website/intake, Google reviews), 3-bullet max rule (what works / where it leaks / the one question that tests the leak first). Note: the item-by-item checklist itself was not in the paste — not invented, add it when sent.
+
+---
+
+## 3-day follow-up nudge (added 2026-11-23 04:19 ET)
+
+Saved: `outreach/sba-follow-up-nudge-3day-2026-11-23.md` — same-thread bump 3 days after the recap, Tier 1 or 2 direction check, momentum + low-pressure pivot (Tier 1 $3,500) variations, closing note after 4–5 more days if still no reply. Not yet pushed to GitHub (pushed set was 20 files, commit a276fa0a).
+
+---
+
+## Post-discovery call notes template (added 2026-11-23 04:20 ET)
+
+Saved: `outreach/sba-discovery-call-notes-template-2026-11-23.md` — 3–5 min template: bottlenecks + verbatim quotes, ROI math inputs (V, C, L, R, payback, admin hrs/wk), tier alignment + objections + agreed next step. Use right after the call, before the recap email; log tier + set the 3-day nudge timer. Not yet pushed to GitHub.
+
+---
+
+## Close-out email (added 2026-11-23 04:21 ET)
+
+Saved: `outreach/sba-close-out-email-2026-11-23.md` — after recap + 3-day nudge + 4–5 more days silence, close the folder cleanly, no guilt, thread stays open to revive. Variations: low-lift down-sell / later timing, high-signal soft exit naming their bottleneck. Mark closed/paused in Supabase/CRM. Not yet pushed to GitHub.

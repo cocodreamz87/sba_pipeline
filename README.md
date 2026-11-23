@@ -57,6 +57,9 @@ Step 3 is `sba_prospects.sql` — run it in the Supabase SQL Editor before Step 
 - `docs/outreach/sba-pre-call-audit-10min-2026-11-23.md` — 10-min pre-call audit
 - `docs/outreach/sba-discovery-call-15min-2026-11-23.md` — 15-min discovery call script
 - `docs/outreach/sba-post-discovery-recap-email-2026-11-23.md` — post-discovery recap email (send within 2 hrs)
+- `docs/outreach/sba-discovery-call-notes-template-2026-11-23.md` — post-discovery call notes (3–5 min, before the recap)
+- `docs/outreach/sba-follow-up-nudge-3day-2026-11-23.md` — 3-day follow-up nudge, same thread
+- `docs/outreach/sba-close-out-email-2026-11-23.md` — close-out email after two follow-ups
 
 ## Known gaps (2026-11-23)
 

@@ -36,6 +36,10 @@ Top 50 accounts/month, 3-point surround sound.
 | 15-min discovery call | `prospecting/outreach/sba-discovery-call-15min-2026-11-23.md` | Saved 2026-11-23 — 5-phase timed agenda + word-for-word script, next step is a 20-min Scope & Workflow Map |
 | 3-tier SBA pricing | `prospecting/sba-pricing-tiers-2026-11-23.md` | Saved 2026-11-23 — Tier 1 $3,500, Tier 2 $7,500 + $650/mo (core), Tier 3 $14,500+ + $1,250/mo; 45-day 100% Tier 1 credit toward Tier 2; +$750 per extra workflow |
 | Post-discovery recap email | `prospecting/outreach/sba-post-discovery-recap-email-2026-11-23.md` | Saved 2026-11-23 — send within 2 hrs, mirrors bottlenecks, 3 tiers, reply 1 / 2 / 3 / "call" |
+| 10-min pre-call audit | `prospecting/outreach/sba-pre-call-audit-10min-2026-11-23.md` | Saved 2026-11-23 — question-conversion + 3-bullet rule; item-by-item checklist was not in the paste, not invented |
+| 3-day follow-up nudge | `prospecting/outreach/sba-follow-up-nudge-3day-2026-11-23.md` | Saved 2026-11-23 — same-thread bump, momentum + low-pressure pivot variations, closing note after 4–5 more days; NOT yet pushed to GitHub |
+| Post-discovery call notes | `prospecting/outreach/sba-discovery-call-notes-template-2026-11-23.md` | Saved 2026-11-23 — 3–5 min template: bottlenecks + verbatim quotes, ROI inputs, tier alignment + next step; NOT yet pushed to GitHub |
+| Close-out email | `prospecting/outreach/sba-close-out-email-2026-11-23.md` | Saved 2026-11-23 — after recap + nudge + 4–5 days silence, down-sell + high-signal variations, mark closed/paused in Supabase; NOT yet pushed to GitHub |
 | Tier 2 SOW template | `prospecting/sba-sow-tier2-2026-11-23.md` | Saved 2026-11-23 — $7,500 in 3 milestones ($2,250 / $3,000 / $2,250), $650/mo care, 3–4 weeks, 2 revision rounds, 14-day bug cover; NOT legal advice, counsel review before sending |
 | 3-question ROI math | `prospecting/sba-roi-math-2026-11-23.md` | Saved 2026-11-23 — owner-supplied V × C × R, 2–3 recovered leads/mo covers $7,500 in ~1.7–3.3 months; use gross profit for sharp SBA owners, 6 hrs/wk @ $75/hr = ~$1,950/mo reclaimed |
 
@@ -122,8 +126,9 @@ Saved in `prospecting/outreach/sba-change-of-ownership-outreach-2026-11-23.md`:
 7. Work `v_high_priority_sba_queue` (score ≥65), top 50/month: Track A copy is ready; B/C need copy first.
 8. Enrich owner contacts (Step 3 — unbuilt), record Looms, send Email 1, call/voicemail in 24–48 hrs, or QR postcard at 48 hrs.
 9. Booked replies go to the 15-min discovery call (timed agenda + script saved), then to a 20-min Scope & Workflow Map — present the 3-tier pricing there (Tier 2 anchor, Tier 1 down-sell with 45-day credit, Tier 3 anchor), or a clean disqualify.
-10. Send the post-discovery recap email within 2 hours — bottlenecks mirrored back, 3 tiers, reply 1 / 2 / 3 / "call".
-11. On a yes, send the Tier 2 SOW (after counsel review) — $2,250 deposit to reserve the slot, then $3,000 at staging, $2,250 at launch, $650/mo care from launch.
+10. Fill out the post-discovery call notes in 3–5 minutes (verbatim quotes first, lock the ROI math), then send the recap email within 2 hours — bottlenecks mirrored back, 3 tiers, reply 1 / 2 / 3 / "call".
+11. No reply in 3 days: send the 3-day follow-up nudge in the same thread (momentum or low-pressure pivot version). Still no reply after 4–5 more days: send the close-out email (down-sell or high-signal variation), mark the lead closed/paused in Supabase, stop chasing — thread stays open for them to revive.
+12. On a yes, send the Tier 2 SOW (after counsel review) — $2,250 deposit to reserve the slot, then $3,000 at staging, $2,250 at launch, $650/mo care from launch.
 
 ## 12. Decisions owed
 
