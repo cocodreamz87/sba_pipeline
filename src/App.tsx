@@ -1,13 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Activity,
-  Database,
-  Layers,
-  RefreshCw,
-  Scale,
-  ShieldAlert,
-  Webhook,
-} from 'lucide-react';
+import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import type {
   AutomationRun,
   BlueprintsBundle,
@@ -16,26 +8,28 @@ import type {
   OutreachTouch,
   OverviewResponse,
   Prospect,
+  TierSpec,
   WorkflowRunSummary,
 } from './types';
+import { DashboardShell } from './components/DashboardShell';
 import { QueueLeadsView } from './components/QueueLeadsView';
 import { WebhookMakeView } from './components/WebhookMakeView';
 import { RunLogsNeonView } from './components/RunLogsNeonView';
 import { CareMetricsView } from './components/CareMetricsView';
 import { ScopeTriageView } from './components/ScopeTriageView';
-
-const NAV_ITEMS: { id: NavTab; label: string; icon: typeof Layers }[] = [
-  { id: 'queue', label: 'Daily Queue & Leads', icon: Layers },
-  { id: 'webhook', label: 'Webhook & Make', icon: Webhook },
-  { id: 'runs', label: 'Run Logs & Neon SQL', icon: Database },
-  { id: 'care', label: 'Tier 2 Care ($650/mo)', icon: Activity },
-  { id: 'triage', label: 'Scope & Change Orders', icon: Scale },
-];
+import { CommandPalette } from './components/CommandPalette';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('queue');
+  const [darkMode, setDarkMode] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [externalSelectedProspectId, setExternalSelectedProspectId] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
 
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -46,10 +40,34 @@ export default function App() {
   const [runs, setRuns] = useState<AutomationRun[]>([]);
   const [runSummary, setRunSummary] = useState<WorkflowRunSummary[]>([]);
   const [careLogs, setCareLogs] = useState<MonthlyCareLog[]>([]);
+  const [tiers, setTiers] = useState<TierSpec[]>([]);
   const [blueprints, setBlueprints] = useState<BlueprintsBundle | null>(null);
+
+  const showToast = useCallback((message: string, tone: 'success' | 'error' = 'success') => {
+    setToast({ message, tone });
+    setTimeout(() => {
+      setToast((curr) => (curr?.message === message ? null : curr));
+    }, 3200);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCmdOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const fetchAll = useCallback(async () => {
     setError(null);
+    setRefreshing(true);
     try {
       const [ovRes, prRes, qRes, rRes, cRes, bpRes] = await Promise.all([
         fetch('/api/overview'),
@@ -82,11 +100,13 @@ export default function App() {
       setRuns(r.runs || []);
       setRunSummary(r.summary || []);
       setCareLogs(c.logs || []);
+      setTiers(c.tiers || []);
       setBlueprints(bp);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -94,165 +114,141 @@ export default function App() {
     void fetchAll();
   }, [fetchAll]);
 
-  const activeNav = NAV_ITEMS.find((n) => n.id === activeTab)!;
+  const handleGlobalSimulateError = useCallback(async () => {
+    const res = await fetch('/api/runs/simulate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'error',
+        client_slug: 'apex_hvac',
+        workflow_name: 'wf2_booking_reminders',
+        failed_node: 'HTTP — Calendar Webhook',
+        error_message: 'Request timeout after 8000ms calling booking endpoint',
+      }),
+    });
+    if (res.ok) {
+      showToast('Simulated Make scenario failure · logged to automation_runs', 'error');
+      setActiveTab('runs');
+      await fetchAll();
+    }
+  }, [fetchAll, showToast]);
+
+  const handleGlobalRollupCare = useCallback(async () => {
+    const res = await fetch('/api/care-logs/rollup', { method: 'POST' });
+    if (res.ok) {
+      showToast('Rolled up automation_runs into monthly client care logs');
+      setActiveTab('care');
+      await fetchAll();
+    }
+  }, [fetchAll, showToast]);
+
+  const errorRunCount = runs.filter((r) => ['error', 'failed', 'timeout', 'rejected'].includes(r.status)).length;
+  const queueCount = dueNudges.length + freshHighScore.length;
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      <aside className="w-64 shrink-0 bg-white border-r border-slate-200 flex flex-col">
-        <div className="px-5 py-4 border-b border-slate-200">
-          <div className="text-sm font-bold tracking-tight text-slate-900 whitespace-nowrap">
-            SBA Lead Ops
+    <>
+      <DashboardShell
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        overview={overview}
+        darkMode={darkMode}
+        onToggleDark={() => setDarkMode((d) => !d)}
+        refreshing={refreshing}
+        onRefresh={() => void fetchAll()}
+        onOpenCommandPalette={() => setCmdOpen(true)}
+        onOpenCsvImport={() => setCsvImportOpen(true)}
+        queueCount={queueCount}
+        errorRunCount={errorRunCount}
+      >
+        {error && (
+          <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg p-3.5 flex items-center gap-2 text-xs text-rose-800 dark:text-rose-200">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
           </div>
-          <div className="text-xs text-slate-500 mt-0.5">
-            Coco Club Live · Tier 2 Care
+        )}
+
+        {loading ? (
+          <div className="space-y-5 animate-pulse">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="lg:col-span-5 h-24 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/60" />
+              <div className="lg:col-span-4 h-24 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/60" />
+              <div className="lg:col-span-3 h-24 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/60" />
+            </div>
+            <div className="h-10 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/60" />
+            <div className="h-80 rounded-lg bg-zinc-200/70 dark:bg-zinc-800/60" />
           </div>
-        </div>
-
-        <nav className="p-3 space-y-1 flex-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-slate-200 text-xs text-slate-500 space-y-1.5">
-          <div className="font-semibold text-slate-700">Active Stack</div>
-          <div>Orchestration: Make</div>
-          <div>Database: Neon PostgreSQL</div>
-          <div>CRM & Views: Airtable</div>
-          <div>Ingress: CF Worker (Secret Gate)</div>
-          <div>Alerts: Slack</div>
-        </div>
-      </aside>
-
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-8">
-          <div className="flex items-center gap-2 text-xs text-slate-500 min-w-0">
-            <span className="font-medium text-slate-900 whitespace-nowrap">Operations</span>
-            <span aria-hidden="true">/</span>
-            <span className="truncate">{activeNav.label}</span>
-            {overview && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="font-mono text-slate-600 whitespace-nowrap">
-                  {overview.storageMode === 'neon_postgres' ? 'Neon Connected' : 'In-Memory Store'}
-                </span>
-              </>
+        ) : (
+          <>
+            {activeTab === 'queue' && (
+              <QueueLeadsView
+                overview={overview}
+                prospects={prospects}
+                touches={touches}
+                dueNudges={dueNudges}
+                freshHighScore={freshHighScore}
+                slackDigest={slackDigest}
+                csvImportOpen={csvImportOpen}
+                onCloseCsvImport={() => setCsvImportOpen(false)}
+                onOpenCsvImport={() => setCsvImportOpen(true)}
+                externalSelectedProspectId={externalSelectedProspectId}
+                onClearExternalSelectedProspect={() => setExternalSelectedProspectId(null)}
+                onRefresh={fetchAll}
+                onToast={showToast}
+              />
             )}
-          </div>
+            {activeTab === 'webhook' && (
+              <WebhookMakeView blueprints={blueprints} onRefresh={fetchAll} onToast={showToast} />
+            )}
+            {activeTab === 'runs' && (
+              <RunLogsNeonView
+                overview={overview}
+                runs={runs}
+                summary={runSummary}
+                blueprints={blueprints}
+                onRefresh={fetchAll}
+                onToast={showToast}
+              />
+            )}
+            {activeTab === 'care' && (
+              <CareMetricsView logs={careLogs} tiers={tiers} onRefresh={fetchAll} onToast={showToast} />
+            )}
+            {activeTab === 'triage' && <ScopeTriageView />}
+          </>
+        )}
+      </DashboardShell>
 
-          <button
-            type="button"
-            onClick={fetchAll}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh Data</span>
-          </button>
-        </header>
+      <CommandPalette
+        open={cmdOpen}
+        onClose={() => setCmdOpen(false)}
+        prospects={prospects}
+        darkMode={darkMode}
+        onSelectTab={(tab) => setActiveTab(tab)}
+        onSelectProspect={(id) => {
+          setActiveTab('queue');
+          setExternalSelectedProspectId(id);
+        }}
+        onSimulateError={handleGlobalSimulateError}
+        onRollupCare={handleGlobalRollupCare}
+        onToggleDark={() => setDarkMode((d) => !d)}
+      />
 
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-          {overview && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <div className="text-xs text-slate-500">Qualified Operators</div>
-                <div className="text-2xl font-semibold font-mono text-slate-900 mt-1 tabular-nums">
-                  {overview.metrics.qualifiedProspects}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">7(a) + 504 deduped</div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <div className="text-xs text-slate-500">Daily Queue Ready</div>
-                <div className="text-2xl font-semibold font-mono text-slate-900 mt-1 tabular-nums">
-                  {overview.metrics.dueFollowUps + overview.metrics.highScoreReady}
-                </div>
-                <div className="text-xs text-slate-500 mt-1 tabular-nums">
-                  {overview.metrics.dueFollowUps} due · {overview.metrics.highScoreReady} new 60+
-                </div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <div className="text-xs text-slate-500">Make Scenario Runs</div>
-                <div className="text-2xl font-semibold font-mono text-slate-900 mt-1 tabular-nums">
-                  {overview.metrics.totalRunsLogged}
-                </div>
-                <div className="text-xs text-slate-500 mt-1 tabular-nums">
-                  {overview.metrics.errorRatePct}% error rate
-                </div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <div className="text-xs text-slate-500">Tier 2 Care MRR</div>
-                <div className="text-2xl font-semibold font-mono text-slate-900 mt-1 tabular-nums">
-                  ${overview.metrics.activeCareMrr.toLocaleString('en-US')}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">$650/mo per client</div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                <div className="text-xs text-slate-500">Change Orders</div>
-                <div className="text-2xl font-semibold font-mono text-slate-900 mt-1 tabular-nums">
-                  ${overview.metrics.changeOrderRevenue.toLocaleString('en-US')}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">Billed separately</div>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2 text-xs text-red-800">
-              <ShieldAlert className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-8 text-center text-xs text-slate-500">
-              Loading SBA pipeline operations data...
-            </div>
+      {toast && (
+        <div
+          role="status"
+          className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-lg shadow-lg border text-xs font-medium ${
+            toast.tone === 'error'
+              ? 'bg-rose-950 text-rose-100 border-rose-800'
+              : 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-800 dark:border-zinc-200'
+          }`}
+        >
+          {toast.tone === 'error' ? (
+            <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
           ) : (
-            <>
-              {activeTab === 'queue' && (
-                <QueueLeadsView
-                  prospects={prospects}
-                  touches={touches}
-                  dueNudges={dueNudges}
-                  freshHighScore={freshHighScore}
-                  slackDigest={slackDigest}
-                  onRefresh={fetchAll}
-                />
-              )}
-              {activeTab === 'webhook' && (
-                <WebhookMakeView blueprints={blueprints} onRefresh={fetchAll} />
-              )}
-              {activeTab === 'runs' && (
-                <RunLogsNeonView
-                  runs={runs}
-                  summary={runSummary}
-                  blueprints={blueprints}
-                  onRefresh={fetchAll}
-                />
-              )}
-              {activeTab === 'care' && (
-                <CareMetricsView logs={careLogs} onRefresh={fetchAll} />
-              )}
-              {activeTab === 'triage' && <ScopeTriageView />}
-            </>
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
           )}
-        </main>
-      </div>
-    </div>
+          <span>{toast.message}</span>
+        </div>
+      )}
+    </>
   );
 }

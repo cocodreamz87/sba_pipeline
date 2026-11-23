@@ -1,7 +1,33 @@
 export type NavTab = 'queue' | 'webhook' | 'runs' | 'care' | 'triage';
 
+export type ServiceTier = 'tier1' | 'tier2' | 'tier3';
+
+export interface TierSpec {
+  id: ServiceTier;
+  name: string;
+  shortLabel: string;
+  tagline: string;
+  setupFee: number;
+  monthlyFee: number;
+  turnaround: string;
+  paymentTerms: string;
+  webScope: string;
+  automationLimitLabel: string;
+  includedWorkflows: number;
+  includedHours: number;
+  supportWindow: string;
+}
+
+export interface UptimeSegment {
+  label: string;
+  status: 'nominal' | 'warning' | 'error';
+  detail: string;
+}
+
 export interface OverviewResponse {
+  agencyName?: string;
   storageMode: 'neon_postgres' | 'in_memory_sandbox';
+  lastSyncedAt: string;
   stack: {
     orchestration: string;
     database: string;
@@ -16,7 +42,20 @@ export interface OverviewResponse {
     totalRunsLogged: number;
     errorRatePct: number;
     activeCareMrr: number;
+    totalSetupValue?: number;
     changeOrderRevenue: number;
+    tierCounts?: {
+      tier1: number;
+      tier2: number;
+      tier3: number;
+    };
+    pipelineVolume: number;
+    avgLeadScore: number;
+  };
+  trends: {
+    touches14d: number[];
+    runs14d: number[];
+    uptimeSegments: UptimeSegment[];
   };
   runSummary: WorkflowRunSummary[];
 }
@@ -27,8 +66,10 @@ export interface Prospect {
   program: '7a' | '504' | '7a+504';
   loan_count: number;
   borr_name: string;
+  borr_street?: string;
   borr_city: string;
   borr_state: string;
+  borr_zip?: string;
   approval_date: string;
   gross_approval: number;
   naics_code: string;
@@ -38,9 +79,13 @@ export interface Prospect {
   google_review_count: number;
   google_phone: string;
   website_url: string;
+  normalized_domain?: string;
   site_status: string;
   response_time_ms: number | null;
   has_booking_link: boolean;
+  has_form_or_intake?: boolean;
+  mailto_only_risk?: boolean;
+  missing_viewport_meta?: boolean;
   friction_tags: string;
   owner_name: string;
   owner_email: string;
@@ -76,6 +121,39 @@ export interface OutreachTouch {
   occurred_at: string;
 }
 
+export interface WebhookStep {
+  id: string;
+  label: string;
+  status: 'passed' | 'warning' | 'failed' | 'skipped';
+  duration_ms: number;
+  detail: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  httpStatus: number;
+  channel: string;
+  sender: string;
+  outcome: string;
+  matchedCompany: string | null;
+  occurredAt: string;
+  rawPayload: Record<string, unknown>;
+  secretUsed: string;
+  responseBody: {
+    status?: string;
+    error?: string;
+    gate?: string;
+    steps?: WebhookStep[];
+    normalizedPayload?: Record<string, unknown>;
+    classification?: { outcome: string; sentiment: string };
+    matchedProspect?: { id?: string; borr_name: string; outreach_status: string } | null;
+    duplicateSkipped?: boolean;
+    touchInserted?: OutreachTouch | null;
+    airtableUpdate?: Record<string, unknown> | null;
+    slackAlert?: { channel: string; text: string } | null;
+  };
+}
+
 export interface AutomationRun {
   id: string;
   execution_id: string;
@@ -105,6 +183,12 @@ export interface WorkflowRunSummary {
 export interface MonthlyCareLog {
   id: string;
   client_slug: string;
+  service_tier: ServiceTier;
+  setup_fee: number;
+  monthly_retainer_fee: number;
+  included_hours: number;
+  care_hours_used: number;
+  upgrade_credit_expires_at: string | null;
   care_month: string;
   site_uptime_pct: number;
   downtime_incidents_count: number;

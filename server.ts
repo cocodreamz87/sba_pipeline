@@ -104,9 +104,81 @@ interface AutomationRun {
   created_at: string;
 }
 
+type ServiceTier = 'tier1' | 'tier2' | 'tier3';
+
+interface TierSpec {
+  id: ServiceTier;
+  name: string;
+  shortLabel: string;
+  tagline: string;
+  setupFee: number;
+  monthlyFee: number;
+  turnaround: string;
+  paymentTerms: string;
+  webScope: string;
+  automationLimitLabel: string;
+  includedWorkflows: number;
+  includedHours: number;
+  supportWindow: string;
+}
+
+const TIER_CATALOG: Record<ServiceTier, TierSpec> = {
+  tier1: {
+    id: 'tier1',
+    name: 'Tier 1: Conversion & Intake Sprint',
+    shortLabel: 'Tier 1 Sprint',
+    tagline: 'Stop losing warm mobile traffic and cut response time under 60s without a full rebuild.',
+    setupFee: 3500,
+    monthlyFee: 0,
+    turnaround: '10 business days',
+    paymentTerms: '50% upfront ($1,750) / 50% at launch ($1,750)',
+    webScope: 'Conversion landing/intake funnel + mobile UX overhaul (up to 3 core views)',
+    automationLimitLabel: '1 core pipeline',
+    includedWorkflows: 1,
+    includedHours: 0,
+    supportWindow: '14-day post-launch bug coverage · 45-day 100% upgrade credit toward Tier 2',
+  },
+  tier2: {
+    id: 'tier2',
+    name: 'Tier 2: Full Revenue & Ops Engine',
+    shortLabel: 'Tier 2 Core',
+    tagline: 'Replace a static site with high-converting UX wired into automated booking, follow-up & reviews.',
+    setupFee: 7500,
+    monthlyFee: 650,
+    turnaround: '3 to 4 weeks',
+    paymentTerms: '30% deposit ($2,250) / 40% staging ($3,000) / 30% launch ($2,250)',
+    webScope: 'Custom dark/light studio marketing site (up to 7 pages) + conversion architecture',
+    automationLimitLabel: 'Up to 3 core pipelines',
+    includedWorkflows: 3,
+    includedHours: 2,
+    supportWindow: '$650/mo Care (3-mo min) · Uptime/webhook alerts + up to 2 hrs/mo tweaks',
+  },
+  tier3: {
+    id: 'tier3',
+    name: 'Tier 3: Custom Operations & Portal Suite',
+    shortLabel: 'Tier 3 Suite',
+    tagline: 'Eliminate manual admin across quoting, client portals, ERP/Stripe sync & billing.',
+    setupFee: 14500,
+    monthlyFee: 1250,
+    turnaround: '6 to 8 weeks',
+    paymentTerms: '30% deposit ($4,350) / 40% milestone ($5,800) / 30% launch ($4,350)',
+    webScope: 'Custom web platform + authenticated client status/booking/invoice portal',
+    automationLimitLabel: 'Unlimited deterministic workflows',
+    includedWorkflows: 99,
+    includedHours: 5,
+    supportWindow: '$1,250/mo Engineering Retainer · Priority SLA, DB backups & 5 hrs/mo expansion',
+  },
+};
+
 interface MonthlyCareLog {
   id: string;
   client_slug: string;
+  service_tier: ServiceTier;
+  setup_fee: number;
+  monthly_retainer_fee: number;
+  included_hours: number;
+  care_hours_used: number;
+  upgrade_credit_expires_at: string | null;
   care_month: string;
   site_uptime_pct: number;
   downtime_incidents_count: number;
@@ -477,6 +549,12 @@ const seedCareLogs: MonthlyCareLog[] = [
   {
     id: '44444444-4444-4444-8444-444444444401',
     client_slug: 'apex_hvac',
+    service_tier: 'tier2',
+    setup_fee: 7500,
+    monthly_retainer_fee: 650,
+    included_hours: 2,
+    care_hours_used: 1.5,
+    upgrade_credit_expires_at: null,
     care_month: '2026-11-01',
     site_uptime_pct: 99.96,
     downtime_incidents_count: 0,
@@ -497,6 +575,12 @@ const seedCareLogs: MonthlyCareLog[] = [
   {
     id: '44444444-4444-4444-8444-444444444402',
     client_slug: 'sunbelt_fleet',
+    service_tier: 'tier2',
+    setup_fee: 7500,
+    monthly_retainer_fee: 650,
+    included_hours: 2,
+    care_hours_used: 1.0,
+    upgrade_credit_expires_at: null,
     care_month: '2026-11-01',
     site_uptime_pct: 99.91,
     downtime_incidents_count: 0,
@@ -514,14 +598,105 @@ const seedCareLogs: MonthlyCareLog[] = [
     change_order_revenue: 750,
     updated_at: '2026-11-23T09:15:00Z',
   },
+  {
+    id: '44444444-4444-4444-8444-444444444403',
+    client_slug: 'gulf_coast_cleaning',
+    service_tier: 'tier1',
+    setup_fee: 3500,
+    monthly_retainer_fee: 0,
+    included_hours: 0,
+    care_hours_used: 0,
+    upgrade_credit_expires_at: '2026-12-28',
+    care_month: '2026-11-01',
+    site_uptime_pct: 99.99,
+    downtime_incidents_count: 0,
+    downtime_notes: 'None',
+    wf1_lead_runs: 27,
+    wf2_booking_runs: 0,
+    wf3_followup_runs: 0,
+    total_workflow_runs: 27,
+    failed_runs_count: 0,
+    dropped_or_retried_count: 0,
+    top_error_summary: 'None',
+    care_tweaks_count: 1,
+    care_tweaks_summary: '14-day launch bug coverage: verified mobile quote redirect & Slack instant alert',
+    change_orders_count: 0,
+    change_order_revenue: 0,
+    updated_at: '2026-11-23T09:20:00Z',
+  },
+  {
+    id: '44444444-4444-4444-8444-444444444404',
+    client_slug: 'palmetto_dental',
+    service_tier: 'tier3',
+    setup_fee: 14500,
+    monthly_retainer_fee: 1250,
+    included_hours: 5,
+    care_hours_used: 3.5,
+    upgrade_credit_expires_at: null,
+    care_month: '2026-11-01',
+    site_uptime_pct: 99.99,
+    downtime_incidents_count: 0,
+    downtime_notes: 'None',
+    wf1_lead_runs: 82,
+    wf2_booking_runs: 64,
+    wf3_followup_runs: 51,
+    total_workflow_runs: 197,
+    failed_runs_count: 0,
+    dropped_or_retried_count: 0,
+    top_error_summary: 'None',
+    care_tweaks_count: 4,
+    care_tweaks_summary: 'Shipped magic-link patient intake portal status view + Stripe two-way invoice webhook sync',
+    change_orders_count: 1,
+    change_order_revenue: 1800,
+    updated_at: '2026-11-23T09:30:00Z',
+  },
 ];
 
 // In-memory state
+interface WebhookDelivery {
+  id: string;
+  httpStatus: number;
+  channel: string;
+  sender: string;
+  outcome: string;
+  matchedCompany: string | null;
+  occurredAt: string;
+  rawPayload: Record<string, unknown>;
+  secretUsed: string;
+  responseBody: Record<string, unknown>;
+}
+
+const seedDeliveries: WebhookDelivery[] = [
+  {
+    id: 'wh_deliv_01',
+    httpStatus: 200,
+    channel: 'email',
+    sender: 'jordan@palmettodental.example.com',
+    outcome: 'replied_interested',
+    matchedCompany: 'PALMETTO DENTAL ASSOCIATES PA',
+    occurredAt: '2026-11-21T10:15:00Z',
+    secretUsed: 'demo-make-shared-secret',
+    rawPayload: {
+      channel: 'email',
+      from_email: 'jordan@palmettodental.example.com',
+      subject: 'Re: Palmetto Dental intake workflow',
+      text: 'Watched the Loom — our front desk is still copying online forms into Dentrix manually. Send two times this week.',
+      event_id: 'inbound_email_palmetto_03',
+    },
+    responseBody: {
+      status: 'accepted',
+      classification: { outcome: 'replied_interested', sentiment: 'positive' },
+      matchedProspect: { borr_name: 'PALMETTO DENTAL ASSOCIATES PA', outreach_status: 'replied' },
+    },
+  },
+];
+
 const state = {
   prospects: [...seedProspects],
   touches: [...seedTouches],
   runs: [...seedRuns],
   careLogs: [...seedCareLogs],
+  webhookDeliveries: [...seedDeliveries],
 };
 
 // ============================================================================
@@ -758,9 +933,37 @@ async function startServer() {
     const runSummary = buildWorkflowRunSummary();
     const totalRuns = state.runs.length;
     const totalErrors = state.runs.filter((r) => ['error', 'failed', 'timeout', 'rejected'].includes(r.status)).length;
+    const pipelineVolume = state.prospects.reduce((sum, p) => sum + Number(p.gross_approval || 0), 0);
+    const avgLeadScore =
+      state.prospects.length > 0
+        ? Math.round(state.prospects.reduce((sum, p) => sum + p.computed_lead_score, 0) / state.prospects.length)
+        : 0;
+
+    const uptimeSegments = [
+      { label: 'Nov 10', status: 'nominal', detail: '100% · 12 runs' },
+      { label: 'Nov 11', status: 'nominal', detail: '100% · 15 runs' },
+      { label: 'Nov 12', status: 'nominal', detail: '100% · 11 runs' },
+      { label: 'Nov 13', status: 'nominal', detail: '100% · 14 runs' },
+      { label: 'Nov 14', status: 'nominal', detail: '100% · 9 runs' },
+      { label: 'Nov 15', status: 'nominal', detail: '100% · 6 runs' },
+      { label: 'Nov 16', status: 'nominal', detail: '100% · 8 runs' },
+      { label: 'Nov 17', status: 'nominal', detail: '100% · 16 runs' },
+      { label: 'Nov 18', status: 'nominal', detail: '100% · 18 runs' },
+      { label: 'Nov 19', status: 'nominal', detail: '100% · 14 runs' },
+      { label: 'Nov 20', status: 'nominal', detail: '100% · 17 runs' },
+      { label: 'Nov 21', status: 'nominal', detail: '100% · 10 runs' },
+      { label: 'Nov 22', status: 'warning', detail: '1 SMS timeout retried cleanly' },
+      {
+        label: 'Nov 23',
+        status: totalErrors > 1 ? 'error' : 'nominal',
+        detail: totalErrors > 1 ? `${totalErrors} error(s) logged` : 'Nominal',
+      },
+    ];
 
     res.json({
+      agencyName: 'Coco Club Live Web Automation Agency',
       storageMode: neonConnected ? 'neon_postgres' : 'in_memory_sandbox',
+      lastSyncedAt: new Date().toISOString(),
       stack: {
         orchestration: 'Make',
         database: 'Neon (PostgreSQL)',
@@ -774,10 +977,30 @@ async function startServer() {
         highScoreReady: queue.freshHighScore.length,
         totalRunsLogged: totalRuns,
         errorRatePct: totalRuns > 0 ? Number(((100 * totalErrors) / totalRuns).toFixed(1)) : 0,
-        activeCareMrr: state.careLogs.length * 650,
+        activeCareMrr: state.careLogs.reduce((sum, l) => sum + Number(l.monthly_retainer_fee || 0), 0),
+        totalSetupValue: state.careLogs.reduce((sum, l) => sum + Number(l.setup_fee || 0), 0),
         changeOrderRevenue: state.careLogs.reduce((sum, l) => sum + Number(l.change_order_revenue || 0), 0),
+        tierCounts: {
+          tier1: state.careLogs.filter((l) => l.service_tier === 'tier1').length,
+          tier2: state.careLogs.filter((l) => l.service_tier === 'tier2').length,
+          tier3: state.careLogs.filter((l) => l.service_tier === 'tier3').length,
+        },
+        pipelineVolume,
+        avgLeadScore,
+      },
+      trends: {
+        touches14d: [2, 4, 3, 6, 5, 2, 1, 7, 8, 6, 9, 5, 4, state.touches.length + 5],
+        runs14d: [12, 15, 11, 14, 9, 6, 8, 16, 18, 14, 17, 10, 13, totalRuns + 10],
+        uptimeSegments,
       },
       runSummary,
+    });
+  });
+
+  app.get('/api/tiers', (_req, res) => {
+    res.json({
+      agencyName: 'Coco Club Live Web Automation Agency',
+      tiers: [TIER_CATALOG.tier1, TIER_CATALOG.tier2, TIER_CATALOG.tier3],
     });
   });
 
@@ -786,6 +1009,87 @@ async function startServer() {
       prospects: getEngagementList().sort((a, b) => b.computed_lead_score - a.computed_lead_score),
       touches: [...state.touches].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at)),
     });
+  });
+
+  app.patch('/api/prospects/:id', (req, res) => {
+    const prospect = state.prospects.find((p) => p.id === req.params.id);
+    if (!prospect) return res.status(404).json({ error: 'Prospect not found' });
+
+    if (typeof req.body?.outreach_status === 'string') {
+      prospect.outreach_status = cleanStr(req.body.outreach_status) || prospect.outreach_status;
+    }
+    if (typeof req.body?.owner_name === 'string') prospect.owner_name = cleanStr(req.body.owner_name);
+    if (typeof req.body?.owner_email === 'string') prospect.owner_email = cleanStr(req.body.owner_email);
+    if (typeof req.body?.owner_phone === 'string') prospect.owner_phone = cleanStr(req.body.owner_phone);
+    if (req.body?.next_followup_at !== undefined) {
+      prospect.next_followup_at = req.body.next_followup_at ? String(req.body.next_followup_at) : null;
+    }
+
+    res.json({ prospect });
+  });
+
+  app.post('/api/prospects/batch', (req, res) => {
+    const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
+    const action = cleanStr(req.body?.action);
+    if (ids.length === 0 || !action) {
+      return res.status(400).json({ error: 'ids and action are required' });
+    }
+
+    const threeDaysOut = new Date(Date.now() + 3 * 86400_000).toISOString();
+    let updated = 0;
+
+    for (const p of state.prospects) {
+      if (!ids.includes(p.id)) continue;
+      if (action === 'mark_ready') p.outreach_status = 'ready';
+      else if (action === 'snooze_3d') p.next_followup_at = threeDaysOut;
+      else if (action === 'disqualify') {
+        p.outreach_status = 'disqualified';
+        p.next_followup_at = null;
+      } else if (action === 'mark_contacted') {
+        p.outreach_status = 'contacted';
+        p.last_contacted_at = new Date().toISOString();
+      }
+      updated++;
+    }
+
+    res.json({ updated, action });
+  });
+
+  app.post('/api/prospects/:id/touches', (req, res) => {
+    const prospect = state.prospects.find((p) => p.id === req.params.id);
+    if (!prospect) return res.status(404).json({ error: 'Prospect not found' });
+
+    const channel = cleanStr(req.body?.channel) || 'email';
+    const outcome = cleanStr(req.body?.outcome) || 'sent';
+    const subjectLine = cleanStr(req.body?.subject_line) || `${prospect.borr_name} — intake teardown`;
+    const messageSummary = cleanStr(req.body?.message_summary) || `Logged outbound ${channel} touch`;
+    const occurredAt = new Date().toISOString();
+
+    const touch: OutreachTouch = {
+      id: crypto.randomUUID(),
+      prospect_id: prospect.id,
+      external_event_id: `manual_${channel}_${Date.now()}`,
+      channel,
+      direction: 'outbound',
+      sequence_name: prospect.campaign_track || 'MANUAL',
+      subject_line: subjectLine,
+      message_summary: messageSummary,
+      outcome,
+      reply_sentiment: '',
+      reply_excerpt: '',
+      occurred_at: occurredAt,
+    };
+
+    state.touches.unshift(touch);
+    prospect.last_contacted_at = occurredAt;
+    if (['new', 'enriched', 'ready', 'audit_queued'].includes(prospect.outreach_status)) {
+      prospect.outreach_status = 'contacted';
+    }
+    if (!prospect.next_followup_at) {
+      prospect.next_followup_at = new Date(Date.now() + 3 * 86400_000).toISOString();
+    }
+
+    res.status(201).json({ touch, prospect });
   });
 
   app.post('/api/prospects/process', (req, res) => {
@@ -938,11 +1242,41 @@ async function startServer() {
     res.json(buildDailyQueue());
   });
 
+  app.get('/api/webhook/deliveries', (_req, res) => {
+    res.json({ deliveries: state.webhookDeliveries });
+  });
+
   app.post('/api/webhook/inbound', (req, res) => {
     const expectedSecret = process.env.SBA_WEBHOOK_SECRET || 'demo-make-shared-secret';
     const providedSecret = cleanStr(req.header('x-webhook-secret') || '');
 
+    const raw = (req.body?.data && typeof req.body.data === 'object' ? { ...req.body, ...req.body.data } : req.body) as Record<
+      string,
+      unknown
+    >;
+
+    const fromEmail = extractEmail(raw);
+    const fromPhone = extractPhone(raw);
+    const explicitChannel = cleanStr(raw.channel || raw.type || '').toLowerCase();
+    const sourceChannel =
+      explicitChannel.includes('sms') || explicitChannel.includes('text') || (!fromEmail && fromPhone)
+        ? 'sms'
+        : 'email';
+
     if (req.body?.enforceSecret !== false && providedSecret !== expectedSecret) {
+      const rejectedBody = {
+        error: 'unauthorized',
+        gate: 'X-Webhook-Secret mismatch',
+        steps: [
+          { id: 'worker', label: 'CF Worker Normalize', status: 'passed', duration_ms: 8, detail: `Normalized ${sourceChannel.toUpperCase()} payload` },
+          { id: 'secret', label: 'X-Webhook-Secret Gate', status: 'failed', duration_ms: 4, detail: '401 Unauthorized — header mismatch' },
+          { id: 'classify', label: 'Deterministic Classifier', status: 'skipped', duration_ms: 0, detail: 'Blocked by secret gate' },
+          { id: 'match', label: 'Neon Prospect Match', status: 'skipped', duration_ms: 0, detail: 'Blocked by secret gate' },
+          { id: 'sync', label: 'Touch & Airtable Sync', status: 'skipped', duration_ms: 0, detail: 'Blocked by secret gate' },
+          { id: 'slack', label: 'Slack Alert', status: 'skipped', duration_ms: 0, detail: 'Blocked by secret gate' },
+        ],
+      };
+
       state.runs.unshift({
         id: crypto.randomUUID(),
         execution_id: `mk_exec_${Date.now()}`,
@@ -957,21 +1291,22 @@ async function startServer() {
         execution_url: 'https://us1.make.com/1042/scenarios/9002',
         created_at: new Date().toISOString(),
       });
-      return res.status(401).json({ error: 'unauthorized', gate: 'X-Webhook-Secret mismatch' });
+
+      state.webhookDeliveries.unshift({
+        id: `wh_deliv_${Date.now()}`,
+        httpStatus: 401,
+        channel: sourceChannel,
+        sender: fromEmail || fromPhone || 'unknown',
+        outcome: 'rejected_401',
+        matchedCompany: null,
+        occurredAt: new Date().toISOString(),
+        rawPayload: raw,
+        secretUsed: providedSecret,
+        responseBody: rejectedBody,
+      });
+
+      return res.status(401).json(rejectedBody);
     }
-
-    const raw = (req.body?.data && typeof req.body.data === 'object' ? { ...req.body, ...req.body.data } : req.body) as Record<
-      string,
-      unknown
-    >;
-
-    const fromEmail = extractEmail(raw);
-    const fromPhone = extractPhone(raw);
-    const explicitChannel = cleanStr(raw.channel || raw.type || '').toLowerCase();
-    const sourceChannel =
-      explicitChannel.includes('sms') || explicitChannel.includes('text') || (!fromEmail && fromPhone)
-        ? 'sms'
-        : 'email';
 
     const bodyText = cleanStr(raw.text || raw.body_text || raw.Body || raw.message || '');
     const replyExcerpt = bodyText.slice(0, 500);
@@ -1063,8 +1398,34 @@ async function startServer() {
         }
       : null;
 
-    res.status(200).json({
+    const steps = [
+      { id: 'worker', label: 'CF Worker Normalize', status: 'passed', duration_ms: 12, detail: `Normalized ${sourceChannel.toUpperCase()} · ${fromEmail || fromPhone || 'no sender'}` },
+      { id: 'secret', label: 'X-Webhook-Secret Gate', status: 'passed', duration_ms: 3, detail: 'Shared secret verified' },
+      { id: 'classify', label: 'Deterministic Classifier', status: 'passed', duration_ms: 5, detail: `${outcome} (${sentiment})` },
+      {
+        id: 'match',
+        label: 'Neon Prospect Match',
+        status: matchedProspect ? 'passed' : 'warning',
+        duration_ms: 42,
+        detail: matchedProspect ? `Matched ${matchedProspect.borr_name}` : 'No prospect match — routing to Unmatched Slack alert',
+      },
+      {
+        id: 'sync',
+        label: 'Touch & Airtable Sync',
+        status: matchedProspect ? (duplicateSkipped ? 'warning' : 'passed') : 'skipped',
+        duration_ms: matchedProspect ? 88 : 0,
+        detail: matchedProspect
+          ? duplicateSkipped
+            ? `Idempotent skip on ${eventId}`
+            : `Inserted touch + patched ${matchedProspect.airtable_record_id}`
+          : 'Skipped (unmatched sender)',
+      },
+      { id: 'slack', label: 'Slack Alert', status: 'passed', duration_ms: 45, detail: `Posted to ${slackAlert.channel}` },
+    ];
+
+    const responsePayload = {
       status: 'accepted',
+      steps,
       normalizedPayload: {
         channel: sourceChannel,
         from_email: fromEmail,
@@ -1081,7 +1442,22 @@ async function startServer() {
       touchInserted,
       airtableUpdate,
       slackAlert,
+    };
+
+    state.webhookDeliveries.unshift({
+      id: `wh_deliv_${Date.now()}`,
+      httpStatus: 200,
+      channel: sourceChannel,
+      sender: fromEmail || fromPhone || 'unknown',
+      outcome,
+      matchedCompany: matchedProspect?.borr_name || null,
+      occurredAt: new Date().toISOString(),
+      rawPayload: raw,
+      secretUsed: providedSecret,
+      responseBody: responsePayload,
     });
+
+    res.status(200).json(responsePayload);
   });
 
   app.get('/api/runs', (_req, res) => {
@@ -1089,6 +1465,28 @@ async function startServer() {
       runs: state.runs,
       summary: buildWorkflowRunSummary(),
     });
+  });
+
+  app.post('/api/runs/:id/retry', (req, res) => {
+    const failed = state.runs.find((r) => r.id === req.params.id);
+    if (!failed) return res.status(404).json({ error: 'Run not found' });
+
+    const retryRun: AutomationRun = {
+      id: crypto.randomUUID(),
+      execution_id: `mk_retry_${Date.now()}`,
+      client_slug: failed.client_slug,
+      workflow_id: failed.workflow_id,
+      workflow_name: failed.workflow_name,
+      failed_node: '',
+      status: 'success',
+      duration_ms: 340,
+      records_processed: 1,
+      error_message: `Replayed from ${failed.execution_id}`,
+      execution_url: `https://us1.make.com/1042/scenarios/retry/logs/${Date.now()}`,
+      created_at: new Date().toISOString(),
+    };
+    state.runs.unshift(retryRun);
+    res.json({ run: retryRun, summary: buildWorkflowRunSummary() });
   });
 
   app.post('/api/runs/simulate', (req, res) => {
@@ -1166,12 +1564,16 @@ async function startServer() {
   });
 
   app.get('/api/care-logs', (_req, res) => {
-    res.json({ logs: state.careLogs });
+    res.json({ logs: state.careLogs, tiers: [TIER_CATALOG.tier1, TIER_CATALOG.tier2, TIER_CATALOG.tier3] });
   });
 
   app.post('/api/care-logs', (req, res) => {
     const clientSlug = cleanStr(req.body?.client_slug) || 'apex_hvac';
     const careMonth = cleanStr(req.body?.care_month) || '2026-11-01';
+    const tierRaw = cleanStr(req.body?.service_tier);
+    const serviceTier: ServiceTier =
+      tierRaw === 'tier1' || tierRaw === 'tier3' ? tierRaw : 'tier2';
+    const tierSpec = TIER_CATALOG[serviceTier];
     const wf1 = Math.max(0, Number(req.body?.wf1_lead_runs ?? 0));
     const wf2 = Math.max(0, Number(req.body?.wf2_booking_runs ?? 0));
     const wf3 = Math.max(0, Number(req.body?.wf3_followup_runs ?? 0));
@@ -1183,6 +1585,15 @@ async function startServer() {
     const record: MonthlyCareLog = {
       id: existingIdx >= 0 ? state.careLogs[existingIdx].id : crypto.randomUUID(),
       client_slug: clientSlug,
+      service_tier: serviceTier,
+      setup_fee: Math.max(0, Number(req.body?.setup_fee ?? tierSpec.setupFee)),
+      monthly_retainer_fee: Math.max(0, Number(req.body?.monthly_retainer_fee ?? tierSpec.monthlyFee)),
+      included_hours: Math.max(0, Number(req.body?.included_hours ?? tierSpec.includedHours)),
+      care_hours_used: Math.max(0, Number(req.body?.care_hours_used ?? 0)),
+      upgrade_credit_expires_at:
+        serviceTier === 'tier1'
+          ? cleanStr(req.body?.upgrade_credit_expires_at) || '2026-12-28'
+          : null,
       care_month: careMonth,
       site_uptime_pct: Number(req.body?.site_uptime_pct ?? 99.95),
       downtime_incidents_count: Math.max(0, Number(req.body?.downtime_incidents_count ?? 0)),
@@ -1252,6 +1663,12 @@ async function startServer() {
         state.careLogs.push({
           id: crypto.randomUUID(),
           client_slug: slug,
+          service_tier: 'tier2',
+          setup_fee: 7500,
+          monthly_retainer_fee: 650,
+          included_hours: 2,
+          care_hours_used: 0,
+          upgrade_credit_expires_at: null,
           care_month: careMonth,
           site_uptime_pct: 99.98,
           downtime_incidents_count: 0,
@@ -1276,6 +1693,11 @@ async function startServer() {
   });
 
   app.post('/api/triage', (req, res) => {
+    const tierRaw = cleanStr(req.body?.serviceTier);
+    const serviceTier: ServiceTier =
+      tierRaw === 'tier1' || tierRaw === 'tier3' ? tierRaw : 'tier2';
+    const tierSpec = TIER_CATALOG[serviceTier];
+
     const inAgreedSpec = Boolean(req.body?.inAgreedSpec);
     const isBrokenBehavior = Boolean(req.body?.isBrokenBehavior);
     const notExternalOrClientEdit = Boolean(req.body?.notExternalOrClientEdit);
@@ -1289,29 +1711,52 @@ async function startServer() {
     const quotePrice = Number(req.body?.quotePrice || 750);
     const turnaround = cleanStr(req.body?.turnaround) || '3 business days';
 
-    let classification: 'Bug Fix' | 'Routine Care' | 'Billable Change Order' = 'Billable Change Order';
+    let classification: 'Bug Fix' | 'Routine Care' | 'Retainer Expansion' | 'Billable Change Order' =
+      'Billable Change Order';
     let billingTreatment = 'Scoped & billed separately before build';
     let emailReply = '';
     let slackReply = '';
 
     if (inAgreedSpec && isBrokenBehavior && notExternalOrClientEdit && !netNewFeature && !changedLogic) {
       classification = 'Bug Fix';
-      billingTreatment = 'Included (no charge)';
-      emailReply = `Hi ${clientName},\n\nGood catch — that behavior is part of the agreed spec for ${companyName}. I've logged it as a bug fix and am patching it now. I'll confirm here as soon as the fix is verified.\n\nBest,\nCoco`;
-      slackReply = `Good catch ${clientName} — logging "${requestTitle}" as a bug fix and getting it patched right away.`;
+      billingTreatment =
+        serviceTier === 'tier1'
+          ? 'Included (14-day Tier 1 Sprint bug coverage)'
+          : `Included (no charge under ${tierSpec.shortLabel})`;
+      emailReply = `Hi ${clientName},\n\nGood catch — that behavior is part of the agreed ${tierSpec.shortLabel} spec for ${companyName}. I've logged it as a bug fix and am patching it now. I'll confirm here as soon as the fix is verified.\n\nBest,\nCoco Club Live Web Automation Agency`;
+      slackReply = `Good catch ${clientName} — logging "${requestTitle}" as a ${tierSpec.shortLabel} bug fix and patching it right away.`;
     } else if (minorCareTweak && !netNewFeature && !changedLogic && !postApprovalRedesign) {
-      classification = 'Routine Care';
-      billingTreatment = 'Included under $650/mo Monthly Care';
-      emailReply = `Hi ${clientName},\n\nGot it — I'll take care of "${requestTitle}" under your $650/mo care plan and notify you once it's live.\n\nBest,\nCoco`;
-      slackReply = `On it — handling "${requestTitle}" under your $650/mo care plan. Will ping when live.`;
+      if (serviceTier === 'tier1') {
+        classification = 'Billable Change Order';
+        billingTreatment = `Outside Tier 1 Sprint (quote $${quotePrice.toLocaleString('en-US')} or apply $3,500 credit toward Tier 2)`;
+        emailReply = `Hi ${clientName},\n\nBecause Tier 1 ($3,500 Conversion & Intake Sprint) is a one-time setup with 14-day bug coverage rather than a monthly care plan, "${requestTitle}" can be handled either as a $${quotePrice.toLocaleString('en-US')} add-on (${turnaround}) or rolled into a Tier 2 Full Revenue & Ops Engine upgrade (where 100% of your $3,500 Tier 1 fee is credited within 45 days).\n\nLet me know which option you'd prefer and I'll send the link.\n\nBest,\nCoco Club Live Web Automation Agency`;
+        slackReply = `Tier 1 covers 14-day bug fixes only — we can run "${requestTitle}" as a $${quotePrice.toLocaleString('en-US')} add-on or credit 100% of your $3,500 Tier 1 fee toward Tier 2 ($650/mo care). Which works best?`;
+      } else if (serviceTier === 'tier3') {
+        classification = 'Retainer Expansion';
+        billingTreatment = 'Included under $1,250/mo Tier 3 Engineering Retainer (5 hrs/mo)';
+        emailReply = `Hi ${clientName},\n\nGot it — I'll slot "${requestTitle}" into your 5 hrs/month Tier 3 Engineering Retainer for ${companyName} and ping you once it is live in staging.\n\nBest,\nCoco Club Live Web Automation Agency`;
+        slackReply = `On it — slotting "${requestTitle}" into your $1,250/mo Tier 3 retainer hours (5 hrs/mo). Will ping when live.`;
+      } else {
+        classification = 'Routine Care';
+        billingTreatment = 'Included under $650/mo Tier 2 Monthly Care (2 hrs/mo)';
+        emailReply = `Hi ${clientName},\n\nGot it — I'll take care of "${requestTitle}" under your $650/mo Tier 2 care plan (up to 2 hrs/mo) and notify you once it's live.\n\nBest,\nCoco Club Live Web Automation Agency`;
+        slackReply = `On it — handling "${requestTitle}" under your $650/mo Tier 2 care plan. Will ping when live.`;
+      }
     } else {
       classification = 'Billable Change Order';
-      billingTreatment = `Separate Change Order ($${quotePrice.toLocaleString('en-US')} fixed)`;
-      emailReply = `Hi ${clientName},\n\n"${requestTitle}" is outside the original Tier 2 scope, so I'm keeping it cleanly separate as a fixed-price add-on before we touch any live workflows:\n\n• Deliverable: ${requestTitle}\n• Price: $${quotePrice.toLocaleString('en-US')} fixed\n• Turnaround: ${turnaround} from approval & deposit\n\nReply "Approved" and I'll send the invoice link to lock in your build slot.\n\nBest,\nCoco`;
-      slackReply = `That's outside the original scope — happy to handle "${requestTitle}" as a fixed $${quotePrice.toLocaleString('en-US')} change order (${turnaround}). Reply "Approved" and I'll send the invoice to kick off.`;
+      const upgradeNote =
+        serviceTier === 'tier1'
+          ? `\n\nNote: If you'd rather step up to Tier 2 ($7,500 + $650/mo for 7 pages & 3 workflows), 100% of your $3,500 Tier 1 sprint fee credits toward the build within 45 days.`
+          : serviceTier === 'tier3'
+            ? `\n\nNote: Because this exceeds your 5 hrs/month Tier 3 engineering allocation (or adds a net-new module/portal integration), we're scoping it cleanly as a fixed change order.`
+            : '';
+      billingTreatment = `Separate Change Order ($${quotePrice.toLocaleString('en-US')} fixed · ${tierSpec.shortLabel})`;
+      emailReply = `Hi ${clientName},\n\n"${requestTitle}" sits outside the original ${tierSpec.name} scope (${tierSpec.automationLimitLabel}), so I'm keeping it cleanly separate as a fixed-price add-on before we touch any live workflows:\n\n• Deliverable: ${requestTitle}\n• Price: $${quotePrice.toLocaleString('en-US')} fixed\n• Turnaround: ${turnaround} from approval & deposit\n\nReply "Approved" and I'll send the invoice link to lock in your build slot.${upgradeNote}\n\nBest,\nCoco Club Live Web Automation Agency`;
+      slackReply = `That's outside the ${tierSpec.shortLabel} scope — happy to handle "${requestTitle}" as a fixed $${quotePrice.toLocaleString('en-US')} change order (${turnaround}). Reply "Approved" and I'll send the invoice to kick off.`;
     }
 
     res.json({
+      serviceTier,
       classification,
       billingTreatment,
       emailReply,
