@@ -59,6 +59,8 @@ Step 3 is `sba_prospects.sql` — run it in the Supabase SQL Editor before Step 
 - `docs/sba-pre-launch-qa-checklist-2026-11-23.md` — pre-launch QA checklist (item list pending)
 - `docs/sba-bug-vs-change-order-2026-11-23.md` — bug fix vs. billable change order triage rule
 - `docs/sba-monthly-care-metrics-2026-11-23.md` — monthly care metrics log structure (Tier 2, $650/mo)
+- `docs/sba-n8n-global-error-workflow-2026-11-23.md` — n8n global error workflow (Error Trigger → Normalize → Supabase)
+- `docs/sba-n8n-error-slack-alert-2026-11-23.md` — n8n error Slack alert payload (Block Kit + text-only)
 - `sba-daily-queue-queries.sql` — daily outbound queue SQL (due nudges, uncontacted 60+, combined)
 - `sba-n8n-morning-queue-workflow.json` — n8n 8am M–F Slack digest workflow (importable JSON)
 - `sba-n8n-inbound-reply-workflow.json` — n8n inbound reply webhook (unsecured, 7 nodes)
@@ -68,6 +70,9 @@ Step 3 is `sba_prospects.sql` — run it in the Supabase SQL Editor before Step 
 - `sba-webhook-relay-wrangler.toml` — Worker config (set real N8N_WEBHOOK_URL before deploy)
 - `sba-care-metrics-schema.sql` — monthly care metrics table DDL (tier2_monthly_care_logs)
 - `sba-run-error-queries.sql` — workflow run & error queries (by sequence, by workflow, recent 20, 7-day grouped)
+- `sba-monthly-care-upsert.sql` — monthly care rollup upsert (automation_runs → tier2_monthly_care_logs)
+- `sba-automation-runs-schema.sql` — automation_runs table DDL (unique execution_id)
+- `sba-n8n-error-normalize.js` — n8n error payload normalize Code node
 - `docs/outreach/sba-change-of-ownership-outreach-2026-11-23.md` — Track A: 2 emails, call opener, voicemail
 - `docs/outreach/sba-pre-call-audit-10min-2026-11-23.md` — 10-min pre-call audit
 - `docs/outreach/sba-discovery-call-15min-2026-11-23.md` — 15-min discovery call script
@@ -78,6 +83,8 @@ Step 3 is `sba_prospects.sql` — run it in the Supabase SQL Editor before Step 
 - `docs/outreach/sba-out-of-scope-change-order-2026-11-23.md` — out-of-scope change-order message (email + Slack)
 - `docs/outreach/sba-14day-post-launch-checkin-2026-11-23.md` — 14-day post-launch check-in (email + Slack)
 - `docs/outreach/sba-change-order-quote-2026-11-23.md` — change-order quote template (reply "Approved" gate)
+- `docs/outreach/sba-deposit-gate-reminder-2026-11-23.md` — deposit / invoice gate reminder (email + Slack)
+- `docs/outreach/sba-milestone2-gate-reminder-2026-11-23.md` — Milestone 2 final payment & go-live gate reminder (email + Slack)
 - `docs/outreach/sba-discovery-call-notes-template-2026-11-23.md` — post-discovery call notes (3–5 min, before the recap)
 - `docs/outreach/sba-follow-up-nudge-3day-2026-11-23.md` — 3-day follow-up nudge, same thread
 - `docs/outreach/sba-close-out-email-2026-11-23.md` — close-out email after two follow-ups
