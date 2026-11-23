@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "@supabase/supabase-js": "^2.119.2",
     "@tailwindcss/vite": "^4.3.5",
     "@types/express": "^5.0.6",

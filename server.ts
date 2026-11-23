@@ -7,6 +7,12 @@ import { parse } from 'csv-parse/sync';
 import 'dotenv/config';
 import { Pool } from 'pg';
 import { normalizeMakeErrorPayload } from './sba-make-error-normalize.js';
+import {
+  qualifyExistingProspectWithAgent,
+  runProspectingAgent,
+  type AgentCandidate,
+  type AgentRunResult,
+} from './server/prospectAgent.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
@@ -697,6 +703,7 @@ const state = {
   runs: [...seedRuns],
   careLogs: [...seedCareLogs],
   webhookDeliveries: [...seedDeliveries],
+  agentRuns: [] as AgentRunResult[],
 };
 
 // ============================================================================
@@ -1791,6 +1798,211 @@ async function startServer() {
         normalizedWorker: readSafe('sba-webhook-relay-worker-normalized.js'),
         wranglerToml: readSafe('sba-webhook-relay-wrangler.toml'),
       },
+    });
+  });
+
+  // ============================================================================
+  // 4B. AI + DETERMINISTIC PROSPECTING, QUALIFICATION & OUTREACH AGENT ROUTES
+  // ============================================================================
+  app.get('/api/agent/history', (_req, res) => {
+    res.json({ runs: state.agentRuns });
+  });
+
+  app.post('/api/agent/run', async (req, res) => {
+    const startMs = Date.now();
+    try {
+      const result = await runProspectingAgent({
+        query: cleanStr(req.body?.query),
+        vertical: cleanStr(req.body?.vertical),
+        geography: cleanStr(req.body?.geography),
+        acquisitionFocus: Boolean(req.body?.acquisitionFocus),
+        maxCandidates: Number(req.body?.maxCandidates || 4),
+        existingProspects: state.prospects.map((p) => ({
+          id: p.id,
+          dedupe_id: p.dedupe_id,
+          normalized_domain: p.normalized_domain,
+          borr_name: p.borr_name,
+        })),
+      });
+
+      state.agentRuns.unshift(result);
+      if (state.agentRuns.length > 12) state.agentRuns.pop();
+
+      state.runs.unshift({
+        id: crypto.randomUUID(),
+        execution_id: `ag_${Date.now()}`,
+        client_slug: 'coco_club_live',
+        workflow_id: 'agent_prospect_discover_v1',
+        workflow_name: 'agent_prospect_qualify_outreach',
+        failed_node: '',
+        status: 'success',
+        duration_ms: Date.now() - startMs,
+        records_processed: result.candidates.length,
+        error_message: '',
+        execution_url: `https://us1.make.com/1042/scenarios/agent/logs/${result.run_id}`,
+        created_at: new Date().toISOString(),
+      });
+
+      res.json(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Prospecting agent failed';
+      state.runs.unshift({
+        id: crypto.randomUUID(),
+        execution_id: `ag_err_${Date.now()}`,
+        client_slug: 'coco_club_live',
+        workflow_id: 'agent_prospect_discover_v1',
+        workflow_name: 'agent_prospect_qualify_outreach',
+        failed_node: 'Gemini Search & Outreach Agent',
+        status: 'error',
+        duration_ms: Date.now() - startMs,
+        records_processed: 0,
+        error_message: message,
+        execution_url: 'https://us1.make.com/1042/scenarios/agent',
+        created_at: new Date().toISOString(),
+      });
+      res.status(500).json({ error: message });
+    }
+  });
+
+  app.post('/api/agent/qualify-existing', async (req, res) => {
+    const prospectId = cleanStr(req.body?.prospectId);
+    const prospect = state.prospects.find((p) => p.id === prospectId);
+    if (!prospect) {
+      return res.status(404).json({ error: 'Prospect not found' });
+    }
+
+    try {
+      const candidate = await qualifyExistingProspectWithAgent(prospect);
+      res.json({ candidate });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to generate agent outreach for prospect';
+      res.status(500).json({ error: message });
+    }
+  });
+
+  app.post('/api/agent/approve', (req, res) => {
+    const candidate = req.body?.candidate as AgentCandidate | undefined;
+    const logTouch = Boolean(req.body?.logTouch);
+    const channel = cleanStr(req.body?.channel) || 'email';
+
+    if (!candidate || !candidate.prospect || !candidate.prospect.borr_name) {
+      return res.status(400).json({ error: 'Valid candidate payload is required' });
+    }
+
+    const incoming = candidate.prospect;
+    let target = state.prospects.find(
+      (p) =>
+        (candidate.existing_prospect_id && p.id === candidate.existing_prospect_id) ||
+        p.dedupe_id === incoming.dedupe_id ||
+        (incoming.normalized_domain && p.normalized_domain === incoming.normalized_domain)
+    );
+
+    const nowIso = new Date().toISOString();
+    let actionTaken: 'created' | 'updated' = 'created';
+
+    if (target) {
+      actionTaken = 'updated';
+      target.site_status = incoming.site_status || target.site_status;
+      target.response_time_ms = incoming.response_time_ms ?? target.response_time_ms;
+      target.has_booking_link = incoming.has_booking_link;
+      target.has_form_or_intake = incoming.has_form_or_intake;
+      target.mailto_only_risk = incoming.mailto_only_risk;
+      target.missing_viewport_meta = incoming.missing_viewport_meta;
+      target.friction_tags = incoming.friction_tags || target.friction_tags;
+      target.computed_lead_score = computeLeadScore(target);
+      target.campaign_track = assignCampaignTrack(target);
+      if (target.outreach_status === 'new' || target.outreach_status === 'enriched') {
+        target.outreach_status = 'ready';
+      }
+    } else {
+      target = {
+        id: crypto.randomUUID(),
+        dedupe_id: incoming.dedupe_id,
+        program: incoming.program || '7a',
+        loan_count: incoming.loan_count || 1,
+        borr_name: incoming.borr_name,
+        borr_street: incoming.borr_street || '',
+        borr_city: incoming.borr_city || '',
+        borr_state: incoming.borr_state || '',
+        borr_zip: incoming.borr_zip || '',
+        approval_date: incoming.approval_date || nowIso.slice(0, 10),
+        gross_approval: Number(incoming.gross_approval || 550000),
+        naics_code: incoming.naics_code || '238220',
+        naics_description: incoming.naics_description || '',
+        is_acquisition: Boolean(incoming.is_acquisition),
+        google_rating: incoming.google_rating ?? null,
+        google_review_count: Number(incoming.google_review_count || 0),
+        google_phone: incoming.google_phone || '',
+        website_url: incoming.website_url || '',
+        normalized_domain: incoming.normalized_domain || extractDomain(incoming.website_url || ''),
+        site_status: incoming.site_status || 'HTTP_200',
+        response_time_ms: incoming.response_time_ms ?? null,
+        has_booking_link: Boolean(incoming.has_booking_link),
+        has_form_or_intake: Boolean(incoming.has_form_or_intake),
+        mailto_only_risk: Boolean(incoming.mailto_only_risk),
+        missing_viewport_meta: Boolean(incoming.missing_viewport_meta),
+        friction_tags: incoming.friction_tags || 'MISSING_INSTANT_BOOKING',
+        owner_name: incoming.owner_name || '',
+        owner_email: incoming.owner_email || '',
+        owner_phone: incoming.owner_phone || incoming.google_phone || '',
+        computed_lead_score: incoming.computed_lead_score,
+        campaign_track: incoming.campaign_track,
+        outreach_status: logTouch ? 'contacted' : 'ready',
+        last_contacted_at: logTouch ? nowIso : null,
+        next_followup_at: logTouch ? new Date(Date.now() + 3 * 86400_000).toISOString() : null,
+        airtable_record_id: incoming.airtable_record_id || `rec${incoming.dedupe_id.slice(0, 8)}`,
+      };
+      target.computed_lead_score = computeLeadScore(target);
+      target.campaign_track = assignCampaignTrack(target);
+      state.prospects.unshift(target);
+    }
+
+    let touch: OutreachTouch | null = null;
+    if (logTouch) {
+      const kit = candidate.outreach;
+      const summaryText =
+        channel === 'phone_call'
+          ? kit?.call_opener_20s || 'Logged agent cold call opener'
+          : channel === 'voicemail'
+            ? kit?.voicemail_20s || 'Dropped agent voicemail script'
+            : kit?.email_1?.slice(0, 320) || 'Sent agent-drafted outreach email';
+
+      touch = {
+        id: crypto.randomUUID(),
+        prospect_id: target.id,
+        external_event_id: `agent_${channel}_${Date.now()}`,
+        channel,
+        direction: 'outbound',
+        sequence_name: `AGENT_${(candidate.outreach?.recommended_tier || 'tier2').toUpperCase()}`,
+        subject_line: kit?.subject_line || `${target.borr_name} — intake teardown`,
+        message_summary: summaryText,
+        outcome: 'sent',
+        reply_sentiment: '',
+        reply_excerpt: '',
+        occurred_at: nowIso,
+      };
+      state.touches.unshift(touch);
+      target.outreach_status = 'contacted';
+      target.last_contacted_at = nowIso;
+      if (!target.next_followup_at) {
+        target.next_followup_at = new Date(Date.now() + 3 * 86400_000).toISOString();
+      }
+    }
+
+    // Mark candidate as synced in any cached agent runs
+    for (const run of state.agentRuns) {
+      for (const c of run.candidates) {
+        if (c.candidate_id === candidate.candidate_id) {
+          c.already_in_crm = true;
+          c.existing_prospect_id = target.id;
+        }
+      }
+    }
+
+    res.status(201).json({
+      action: actionTaken,
+      prospect: target,
+      touch,
     });
   });
 

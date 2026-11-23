@@ -17,6 +17,7 @@ import { WebhookMakeView } from './components/WebhookMakeView';
 import { RunLogsNeonView } from './components/RunLogsNeonView';
 import { CareMetricsView } from './components/CareMetricsView';
 import { ScopeTriageView } from './components/ScopeTriageView';
+import { ProspectingAgentView } from './components/ProspectingAgentView';
 import { CommandPalette } from './components/CommandPalette';
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
   const [externalSelectedProspectId, setExternalSelectedProspectId] = useState<string | null>(null);
+  const [agentTargetProspectId, setAgentTargetProspectId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -179,6 +181,20 @@ export default function App() {
           </div>
         ) : (
           <>
+            {activeTab === 'agent' && (
+              <ProspectingAgentView
+                prospects={prospects}
+                tiers={tiers}
+                externalProspectId={agentTargetProspectId}
+                onClearExternalProspect={() => setAgentTargetProspectId(null)}
+                onRefresh={fetchAll}
+                onOpenInQueue={(id) => {
+                  setActiveTab('queue');
+                  setExternalSelectedProspectId(id);
+                }}
+                onToast={showToast}
+              />
+            )}
             {activeTab === 'queue' && (
               <QueueLeadsView
                 overview={overview}
@@ -192,6 +208,10 @@ export default function App() {
                 onOpenCsvImport={() => setCsvImportOpen(true)}
                 externalSelectedProspectId={externalSelectedProspectId}
                 onClearExternalSelectedProspect={() => setExternalSelectedProspectId(null)}
+                onLaunchAgentForProspect={(id) => {
+                  setAgentTargetProspectId(id);
+                  setActiveTab('agent');
+                }}
                 onRefresh={fetchAll}
                 onToast={showToast}
               />

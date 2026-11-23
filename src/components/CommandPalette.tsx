@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
+  Bot,
   Building2,
   Database,
   Layers,
@@ -58,6 +59,14 @@ export function CommandPalette({
 
   const items = useMemo<PaletteItem[]>(() => {
     const navItems: PaletteItem[] = [
+      {
+        id: 'nav-agent',
+        group: 'Navigation',
+        label: 'Prospecting Agent',
+        hint: 'Discover, audit, qualify & draft Tier 1–3 outreach',
+        icon: Bot,
+        run: () => onSelectTab('agent'),
+      },
       {
         id: 'nav-queue',
         group: 'Navigation',

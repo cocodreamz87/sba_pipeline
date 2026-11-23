@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import {
   Activity,
+  Bot,
   ChevronLeft,
   ChevronRight,
   Database,
@@ -64,6 +65,11 @@ export function DashboardShell({
     {
       heading: 'Pipeline & Ingress',
       items: [
+        {
+          id: 'agent',
+          label: 'Prospecting Agent',
+          icon: Bot,
+        },
         {
           id: 'queue',
           label: 'Daily Queue & Leads',

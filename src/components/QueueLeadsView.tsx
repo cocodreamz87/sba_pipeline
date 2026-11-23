@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpRight,
+  Bot,
   CheckCircle2,
   Clock,
   Filter,
@@ -29,6 +30,7 @@ interface QueueLeadsViewProps {
   onOpenCsvImport: () => void;
   externalSelectedProspectId: string | null;
   onClearExternalSelectedProspect: () => void;
+  onLaunchAgentForProspect?: (prospectId: string) => void;
   onRefresh: () => Promise<void>;
   onToast: (message: string, tone?: 'success' | 'error') => void;
 }
@@ -54,6 +56,7 @@ export function QueueLeadsView({
   onOpenCsvImport,
   externalSelectedProspectId,
   onClearExternalSelectedProspect,
+  onLaunchAgentForProspect,
   onRefresh,
   onToast,
 }: QueueLeadsViewProps) {
@@ -847,17 +850,33 @@ export function QueueLeadsView({
                   </a>
                 )}
               </div>
-              <div className="col-span-2 sm:col-span-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-[11px]">
-                <span className="text-zinc-500 dark:text-zinc-400">Recommended Coco Club Live Offer Fit</span>
-                <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">
-                  {activeProspect.gross_approval >= 1_100_000 || activeProspect.loan_count > 1
-                    ? 'Tier 3 Portal Suite ($14.5k+ + $1,250/mo) / Tier 2 Anchor'
-                    : activeProspect.site_status === 'HTTP_200' &&
-                        activeProspect.has_form_or_intake &&
-                        !activeProspect.missing_viewport_meta
-                      ? 'Tier 1 Intake Sprint ($3,500 · 45d credit to Tier 2)'
-                      : 'Tier 2 Full Revenue & Ops Engine ($7,500 + $650/mo)'}
-                </span>
+              <div className="col-span-2 sm:col-span-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <div>
+                  <span className="text-zinc-500 dark:text-zinc-400 mr-2">Recommended Offer Fit:</span>
+                  <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+                    {activeProspect.gross_approval >= 1_100_000 || activeProspect.loan_count > 1
+                      ? 'Tier 3 Portal Suite ($14.5k+ + $1,250/mo) / Tier 2 Anchor'
+                      : activeProspect.site_status === 'HTTP_200' &&
+                          activeProspect.has_form_or_intake &&
+                          !activeProspect.missing_viewport_meta
+                        ? 'Tier 1 Intake Sprint ($3,500 · 45d credit to Tier 2)'
+                        : 'Tier 2 Full Revenue & Ops Engine ($7,500 + $650/mo)'}
+                  </span>
+                </div>
+                {onLaunchAgentForProspect && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const id = activeProspect.id;
+                      setActiveProspectId(null);
+                      onLaunchAgentForProspect(id);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors cursor-pointer shrink-0"
+                  >
+                    <Bot className="w-3.5 h-3.5" />
+                    <span>Draft Agent Outreach</span>
+                  </button>
+                )}
               </div>
             </div>
 

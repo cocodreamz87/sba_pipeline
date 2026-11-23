@@ -1,4 +1,4 @@
-export type NavTab = 'queue' | 'webhook' | 'runs' | 'care' | 'triage';
+export type NavTab = 'agent' | 'queue' | 'webhook' | 'runs' | 'care' | 'triage';
 
 export type ServiceTier = 'tier1' | 'tier2' | 'tier3';
 
@@ -226,3 +226,83 @@ export interface BlueprintsBundle {
     wranglerToml: string;
   };
 }
+
+export interface AgentStepTrace {
+  id: 'discovery' | 'audit_qualify' | 'outreach';
+  label: string;
+  status: 'passed' | 'warning' | 'failed';
+  duration_ms: number;
+  detail: string;
+}
+
+export interface GroundingSource {
+  title: string;
+  uri: string;
+}
+
+export interface AgentOutreachKit {
+  recommended_tier: ServiceTier;
+  qualification_rationale: string;
+  subject_line: string;
+  email_1: string;
+  email_2_followup: string;
+  call_opener_20s: string;
+  voicemail_20s: string;
+  loom_talking_points: string[];
+}
+
+export interface AgentProspectPayload {
+  dedupe_id: string;
+  program: '7a' | '504' | '7a+504';
+  loan_count: number;
+  borr_name: string;
+  borr_street: string;
+  borr_city: string;
+  borr_state: string;
+  borr_zip: string;
+  approval_date: string;
+  gross_approval: number;
+  naics_code: string;
+  naics_description: string;
+  is_acquisition: boolean;
+  google_rating: number | null;
+  google_review_count: number;
+  google_phone: string;
+  website_url: string;
+  normalized_domain: string;
+  site_status: string;
+  response_time_ms: number | null;
+  has_booking_link: boolean;
+  has_form_or_intake: boolean;
+  mailto_only_risk: boolean;
+  missing_viewport_meta: boolean;
+  friction_tags: string;
+  owner_name: string;
+  owner_email: string;
+  owner_phone: string;
+  computed_lead_score: number;
+  campaign_track: string;
+  airtable_record_id: string;
+}
+
+export interface AgentCandidate {
+  candidate_id: string;
+  already_in_crm: boolean;
+  existing_prospect_id?: string;
+  site_title: string;
+  prospect: AgentProspectPayload;
+  outreach: AgentOutreachKit;
+  sources: GroundingSource[];
+}
+
+export interface AgentRunResult {
+  run_id: string;
+  query: string;
+  vertical: string;
+  geography: string;
+  created_at: string;
+  steps: AgentStepTrace[];
+  candidates: AgentCandidate[];
+  grounding_sources: GroundingSource[];
+}
+
