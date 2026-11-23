@@ -201,3 +201,9 @@ Saved 6 files:
 - `sba-lead-pipeline/sba-webhook-relay-wrangler.toml` — set real N8N_WEBHOOK_URL before deploy; secrets via `wrangler secret put N8N_WEBHOOK_SECRET` (+ optional RELAY_INGRESS_TOKEN).
 - `sba-inbound-reply-webhook-2026-11-23.md` — flow, classification rules, guardrails, curl 401/200 test.
 FLAG: BLOCKED — `sba_outreach_touches` + enums + trigger do NOT exist in `sba_prospects.sql` (checked 2026-11-23). Build touches table + enums + trigger together with the engagement view before importing/activating. None of the 6 pushed to GitHub yet.
+
+---
+
+## Staging build & workflow demo email (added 2026-11-23 04:31 ET)
+
+Saved `outreach/sba-staging-build-demo-email-2026-11-23.md` — Tier 2 staging site + 5–7 min walkthrough, review focus (pages/mobile flow + 3 workflows), feedback as one consolidated list within 5 business days, Milestone 2 $3,000 settled then production launch + DNS cutover. Tip: anchor feedback to page URLs + workflow names (Workflow 1 / 2 / 3). Not pushed to GitHub yet.
